@@ -183,12 +183,17 @@ class HashingEncoder(BaseEstimator, TransformerMixin):
         self.cols_set = []
         self.unknown_type = None
 
-    def fit(self, X, col, n_components=5, hashing_method='md5'):
+    def fit(self, X, col=None, n_components=5, hashing_method='md5'):
         """
         :param X: array-like of shape (n_samples,)
         :param y: None
         :return:
         """
+        if n_components <= 0:
+            raise ValueError('n_components shout be greater than 0.')
+
+        if not col:
+            col = [f'Hash_{_}' for _ in range(n_components)]
         self.col = col
         self.n_components = n_components
         self.hashing_method = hashing_method
