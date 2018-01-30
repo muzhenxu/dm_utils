@@ -220,7 +220,7 @@ class targetencoder(object):
             self.dmap[key] = p
 
     def transform(self, X):
-        X = np.array([self.dmap[i] if i in self.dmap.keys() else sel                                                             f.base_p for i in X])
+        X = np.array([self.dmap[i] if i in self.dmap.keys() else self.base_p for i in X])
         return X
 
 
