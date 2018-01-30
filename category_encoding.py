@@ -146,9 +146,10 @@ class countencoder(object):
 
     """
 
-    def __init__(self, unseen_values=1, log_transform=True):
+    def __init__(self, unseen_values=1, log_transform=True, smoothing=1):
         self.unseen_values = unseen_values
         self.log_transform = log_transform
+        self.smoothing = 1
 
     def fit(self, X, y=None):
         """
@@ -164,7 +165,7 @@ class countencoder(object):
         :return:
         """
         # TODO: maybe use pd.Series with replace can faster. should test.
-        X = np.array([self.dmap[i] if i in self.dmap.keys() else self.unseen_values for i in X])
+        X = np.array([self.dmap[i] + self.smoothing if i in self.dmap.keys() else self.unseen_values for i in X])
         if self.log_transform:
             X = np.log(X)
         return X
@@ -224,17 +225,80 @@ class targetencoder(object):
         return X
 
 
+# class CategoryEncoder(object):
+#     def __init__(self, method='onehotencoder'):
+#         self.method = method
+#
+#     def fit(self, X, y=None):
+#         self.enc = eval(self.method)()
+#         self.enc.fit(X, y)
+#
+#     def transform(self, X):
+#         return self.enc.transform(X)
+
+def CategoryEncoder(method='countencoder'):
+    return eval(method)()
+
+
 # TODO: hashencoder
+# import hashlib
+# class HashingEncoder(object):
+#     def __init__(self):
+#         self.cols_set = []
+#         self.unknown_type = None
+#
+#     def fit(self, X, col=None, n_components=5, hashing_method='md5'):
+#         """
+#         :param X: array-like of shape (n_samples,)
+#         :param y: None
+#         :return:
+#         """
+#         if n_components <= 0:
+#             raise ValueError('n_components shout be greater than 0.')
+#
+#         if not col:
+#             col = 'hh'
+#         self.col = col
+#         self.n_components = n_components
+#         self.hashing_method = hashing_method
+#
+#         self.cols_set = list(np.unique(X))
+#         self.unknown_type = '<unknown>'
+#         while (self.unknown_type in self.cols_set):
+#             self.unknown_type += '*'
+#         return self
+#
+#     def transform(self, X):
+#         """
+#         :param X: array-like of shape (n_samples,)
+#         :return:
+#         """
+#         X_tmp = [_  if _ in self.cols_set else self.unknown_type  for _ in X]
+#         X_tmp = pd.DataFrame(X_tmp, columns=[self.col])
+#         return self.__hash_col(X_tmp)
+#
+#
+#     def __hash_col(self, df):
+#         """
+#         :param df: dataframe of X
+#         return:
+#         """
+#         cols = [f'{self.col}_{i}' for i in range(self.n_components)]
+#         def xform(x):
+#             tmp = np.zeros(self.n_components)
+#             tmp[self.__hash(x) % self.n_components] = 1
+#             return pd.Series(tmp, index=cols).astype(int)
+#         df[cols] = df[self.col].apply(xform)
+#         return df.drop(self.col, axis=1)
+#
+#     def __hash(self, string):
+#         if self.hashing_method == 'md5':
+#             return int(hashlib.md5(str(string).encode('utf-8')).hexdigest(), 16)
+#         else:
+#             raise ValueError('Hashing Method: %s Not Available. Please check that.' % self.hashing_method)
 
-from sklearn.feature_extraction.text import CountVectorizer
 
-
-class CategoryEncoder(object):
-    def __init__(self, method='onehot'):
-        self.method = method
-
-    def fit(self, X, y=None):
-        pass
-
-    def transform(self, X):
-        pass
+if __name__ == '__main__':
+    enc = CategoryEncoder()
+    enc.fit(np.array(['a', 'c', 'd', 'a', 'a', 'd']))
+    enc.transform(np.array(['f', 'c', 'd']))
