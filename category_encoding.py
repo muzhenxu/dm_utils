@@ -237,6 +237,12 @@ class targetencoder(object):
 #         return self.enc.transform(X)
 
 def CategoryEncoder(method='countencoder'):
+    """
+    contain these method: onehotencoder, labelencoder, targetencoder, countencoder(default)
+
+    :param method: onehotencoder, labelencoder, targetencoder, countencoder(default)
+    :return:
+    """
     return eval(method)()
 
 
