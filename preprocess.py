@@ -8,58 +8,22 @@ from sklearn import metrics as mr
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 
-# def del_redundance_cols(df_origin, nan_threshold=100, same_threshold=20, drop_duplicates=False, silent=False):
-#     """
-#     剔除完全缺失字段，完全同值字段
-#     删除重复case
-#     :param df_origin:
-#     :param silent:
-#     :param threshold:
-#     :return:
-#     """
-#     df = df_origin.copy()
-#
-#     df_nan = pd.DataFrame(df.isnull().sum(axis=0), columns=['num'])
-#     df_nan['notnull_num'] = df.shape[0] - df_nan['num']
-#     df_nan['percent'] = df_nan['num'] / df.shape[0]
-#     df_nan = df_nan.sort_values(by=['num'], ascending=False)
-#
-#     nunique_value = df.apply(lambda c: c.nunique())
-#     df_nan['only_value'] = nunique_value
-#
-#     same_value = df.apply(lambda c: c.value_counts().iloc[0])
-#     df_nan['same_value'] = same_value
-#     df_nan['same_ratio'] = same_value / df.shape[0]
-#
-#     # drop_cols = nunique_value.index[nunique_value < 2]
-#
-#     # 计算缺失值占比过多的columns
-#     nan_ratio = 1 - nan_threshold / df.shape[0]
-#     nan_cols = df_nan.index[df_nan.percent > nan_ratio]
-#
-#     # 计算同一值过多的columns
-#     same_ratio = 1 - same_threshold / df.shape[0]
-#     same_cols = df_nan.index[df_nan.same_ratio > same_ratio]
-#
-#     df = df.drop(same_cols, axis=1)
-#     df = df.drop(nan_cols, axis=1)
-#
-#     n = df.shape[0]
-#     if drop_duplicates:
-#         df = df.drop_duplicates()
-#     m = df.shape[0]
-#
-#     if not silent:
-#         print(df_nan)
-#         print('columns which all values are nan: ', nunique_value.index[nunique_value == 0])
-#         print('columns which all values are the same: ', nunique_value.index[nunique_value == 1])
-#         print('columns which notnull values\' num below %s and nan ratio beyond %s: ' % (nan_threshold, nan_ratio),
-#               nan_cols.values)
-#         print('columns which not same values\' num below %s and same ratio beyond %s: ' % (same_threshold, same_ratio),
-#               same_cols.values)
-#         print('%s cases is duplicates.' % (n - m))
-#
-#     return df
+
+def desc_df(df_origin):
+    df = df_origin.copy()
+
+    df_desc = pd.DataFrame(df.isnull().sum(axis=0), columns=['null_num'])
+    df_desc['notnull_num'] = df.shape[0] - df_desc['null_num']
+    df_desc['null_ratio'] = df_desc['num'] / df.shape[0]
+
+    nunique_value = df.apply(lambda c: c.nunique())
+    df_desc['diff_values_num'] = nunique_value
+
+    same_value = df.apply(lambda c: c.value_counts().iloc[0])
+    df_desc['most_value_num'] = same_value
+    df_desc['same_ratio'] = same_value / df.shape[0]
+
+    return df_desc
 
 
 def del_redundance_cols(df_origin, nan_threshold=100, same_threshold=20, drop_duplicates=False, silent=False):
@@ -114,6 +78,7 @@ def del_redundance_cols(df_origin, nan_threshold=100, same_threshold=20, drop_du
         print('%s cases is duplicates.' % (n - m))
 
     return df, df_nan
+
 
 def cmp_array(a_origin, b_origin):
     """
@@ -222,6 +187,7 @@ def woe_translate(df_origin, labels, columns=None, onehot=True, del_origin_colum
 
     return df, df_iv_nmi, dic_cut_points, dic_woe
 
+
 def onehot(df_origin, del_origin_columns=True):
     df = df_origin.copy()
     cols = df.columns
@@ -233,5 +199,3 @@ def onehot(df_origin, del_origin_columns=True):
         if del_origin_columns:
             del df[c]
     return df
-
-
