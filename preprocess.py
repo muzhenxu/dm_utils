@@ -113,7 +113,7 @@ def del_redundance_cols(df_origin, nan_threshold=100, same_threshold=20, drop_du
               same_cols.values)
         print('%s cases is duplicates.' % (n - m))
 
-    return df
+    return df, df_nan
 
 def cmp_array(a_origin, b_origin):
     """

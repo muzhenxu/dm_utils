@@ -6,57 +6,7 @@ from collections import defaultdict
 from scipy.stats import ks_2samp
 from sklearn import metrics as mr
 from sklearn.model_selection import StratifiedKFold
-
-
-def cut_points(x, y, max_depth=5, min_samples_leaf=0.01, max_leaf_nodes=None, random_state=7):
-    """
-    A decision tree method to bin continuous variable to categorical one.
-    :param x: The training input samples
-    :param y: The target values
-    :param max_depth: The maximum depth of the tree
-    :param min_samples_leaf: int, float, The minimum number of samples required to be at a leaf node
-    :param max_leaf_nodes: Grow a tree with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes.
-    :return: The list of cut points
-    """
-    dt = DecisionTreeClassifier(max_depth=max_depth, min_samples_leaf=min_samples_leaf, max_leaf_nodes=max_leaf_nodes,
-                                random_state=random_state)
-    dt.fit(np.array(x).reshape(-1, 1), np.array(y))
-    th = dt.tree_.threshold
-    f = dt.tree_.feature
-
-    # 对于没有参与分裂的节点，dt默认会给-2,所以这里要根据dt.tree_.feature把-2踢掉
-    return sorted(th[np.where(f != -2)])
-
-
-def feature_discretion(x, threshold, bins=20, interval=True):
-    """
-    Discrete x from continuous to categorical.
-    :param x: The continuous variable
-    :param threshold: The list of cut_points
-    :param bins: If the nunique of x larger than bins, use 'def cut_points' to discrete x. Else do nothing.
-    :param interval: If True, discretion output is interval. Otherwise, replace interval with orderly int.
-    :return: list, discretion of x
-    """
-    if interval:
-        if len(set(x)) > bins:
-            threshold.append(np.inf)
-            threshold.insert(0, -np.inf)
-            x_cut = pd.cut(x, bins=threshold)
-            return x_cut
-        else:
-            return x
-    else:
-        x = np.array(x)
-        y = x.copy()
-
-        if len(set(x)) > bins:
-            threshold.append(np.inf)
-            threshold.insert(0, -np.inf)
-            for i in range(len(threshold) - 1):
-                y[np.where((x > threshold[i]) & (x <= threshold[i + 1]))] = i + 1
-            return y
-        else:
-            return x
+from utils import feature_encoding
 
 
 def count_binary(a, event=1):
@@ -71,8 +21,7 @@ def count_binary(a, event=1):
     return event_count, non_event_count
 
 
-def woe_iv(x, y, event=1, max_depth=5, min_samples_leaf=0.01, max_leaf_nodes=None, bins=20, interval=True,
-           random_state=7):
+def woe_iv(x, y, event=1, **kwargs):
     """
     calculate woe and information for a single feature
     :param x: 1-D numpy stands for single feature
@@ -84,9 +33,9 @@ def woe_iv(x, y, event=1, max_depth=5, min_samples_leaf=0.01, max_leaf_nodes=Non
     x = np.array(x)
     y = np.array(y)
 
-    threshold = cut_points(x, y, max_depth=max_depth, min_samples_leaf=min_samples_leaf, max_leaf_nodes=max_leaf_nodes,
-                           random_state=random_state)
-    x = feature_discretion(x, threshold, bins=bins, interval=interval)
+    enc = feature_encoding.BinningEncoder(**kwargs)
+    enc.fit(x, y)
+    x = enc.transform(x)
 
     event_total, non_event_total = count_binary(y, event=event)
     x_labels = np.unique(x)
@@ -109,8 +58,7 @@ def woe_iv(x, y, event=1, max_depth=5, min_samples_leaf=0.01, max_leaf_nodes=Non
     return woe_dict, iv
 
 
-def iv_df(df, labels, columns=None, event=1, max_depth=5, min_samples_leaf=0.01, max_leaf_nodes=None, bins=20,
-          interval=True, random_state=7):
+def iv_df(df, labels, columns=None, **kwargs):
     """
     compute iv for every column in columns with every label in labels
     :param df: dataframe
@@ -125,8 +73,7 @@ def iv_df(df, labels, columns=None, event=1, max_depth=5, min_samples_leaf=0.01,
 
     for t in labels:
         for c in columns:
-            dic[t][c] = woe_iv(df[c], df[t], event=event, max_depth=max_depth, min_samples_leaf=min_samples_leaf,
-                               max_leaf_nodes=max_leaf_nodes, bins=bins, interval=interval, random_state=random_state)[
+            dic[t][c] = woe_iv(df[c], df[t], **kwargs)[
                 1]
     df = pd.DataFrame(dic)
     df.columns = [['IV'] * df.shape[1], df.columns]
@@ -218,8 +165,7 @@ def auc_df(df, labels, columns=None, n_split=5, max_depth=5, min_samples_leaf=1,
     return df
 
 
-def feature_evaluation_single(df, labels, columns=None, event=1, max_depth=5, min_samples_leaf=0.01,
-                              max_leaf_nodes=None, bins=20, interval=True, random_state=7):
+def feature_evaluation_single(df, labels, columns=None, **kwargs):
     """
     compute auc, iv, ks for every column in columns with every label in labels
     :param df:
@@ -232,15 +178,13 @@ def feature_evaluation_single(df, labels, columns=None, event=1, max_depth=5, mi
 
     df_ks = ks_df(df, labels, columns)
     df_auc = auc_df(df, labels, columns)
-    df_iv = iv_df(df, labels, columns, event=event, max_depth=max_depth, min_samples_leaf=min_samples_leaf,
-                  max_leaf_nodes=max_leaf_nodes, bins=bins, interval=interval, random_state=random_state)
+    df_iv = iv_df(df, labels, columns, **kwargs)
     df = pd.concat([df_auc, df_iv, df_ks], axis=1)
     df = df.sort_index(axis=1)
     return df
 
 
-def feature_evaluation(df, labels, columns=None, hue=None, event=1, max_depth=5, min_samples_leaf=0.01,
-                       max_leaf_nodes=None, bins=20, interval=True, random_state=7):
+def feature_evaluation(df, labels, hue=None, columns=None, **kwargs):
     """
     compute auc, iv, ks for every column in columns with every label in labels group by hue.
     :param df:
@@ -254,17 +198,25 @@ def feature_evaluation(df, labels, columns=None, hue=None, event=1, max_depth=5,
 
     res = pd.DataFrame()
     if hue is None:
-        return feature_evaluation_single(df, labels, columns, event=event, max_depth=max_depth,
-                                         min_samples_leaf=min_samples_leaf,
-                                         max_leaf_nodes=max_leaf_nodes, bins=bins, interval=interval,
-                                         random_state=random_state)
+        return feature_evaluation_single(df, labels, columns=columns, **kwargs)
     s = sorted(df[hue].unique())
     for i in s:
-        temp = feature_evaluation_single(df[df[hue] == i], labels,
-                                         columns, event=event, max_depth=max_depth, min_samples_leaf=min_samples_leaf,
-                                         max_leaf_nodes=max_leaf_nodes, bins=bins, interval=interval,
-                                         random_state=random_state)
+        temp = feature_evaluation_single(df[df[hue] == i], labels, columns=columns, **kwargs)
         temp.columns = pd.MultiIndex.from_product([temp.columns.levels[0], temp.columns.levels[1], [i]])
         res = pd.concat([res, temp], axis=1)
     res = res.sort_index(axis=1)
     return res
+
+if __name__ == '__main__':
+    df = pd.read_excel('/Users/muzhen/Downloads/0205_dqd_cov_3(1).xlsx')
+    y = df.pop('d0')
+    df = df.iloc[:, :3]
+    df['d0'] = y
+    t1 = feature_evaluation(df, labels=['d0'])
+    t2 = feature_evaluation(df, labels=['d0'], binning_method='qcut', bins=5)
+    t3 = feature_evaluation(df, labels=['d0'], binning_method='qcut', bins=10)
+    t4 = feature_evaluation(df, labels=['d0'], binning_method='qcut', bins=15)
+    t5 = feature_evaluation(df, labels=['d0'], binning_method='cut', bins=5)
+    t6 = feature_evaluation(df, labels=['d0'], binning_method='cut', bins=10)
+    t7 = feature_evaluation(df, labels=['d0'], binning_method='cut', bins=15)
+    print(t1, t2, t3, t4, t5, t6, t7)
