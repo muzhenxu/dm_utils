@@ -6,7 +6,7 @@ import re
 
 
 class OperateHdfs(object):
-    def __init__(self, ip_port='http://hadoop-hd1:50070', user='dm_xu_h', root='/user/hive/warehouse'):
+    def __init__(self, user='dm_xu_h', ip_port='http://hadoop-hd1:50070', root='/user/hive/warehouse'):
         self.client = hdfs.Client(ip_port)
         self.user = user
         self.root = root
