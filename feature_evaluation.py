@@ -208,15 +208,17 @@ def feature_evaluation(df, labels, hue=None, columns=None, **kwargs):
     return res
 
 if __name__ == '__main__':
-    df = pd.read_excel('/Users/muzhen/Downloads/0205_dqd_cov_3(1).xlsx')
-    y = df.pop('d0')
-    df = df.iloc[:, :3]
-    df['d0'] = y
-    t1 = feature_evaluation(df, labels=['d0'])
-    t2 = feature_evaluation(df, labels=['d0'], binning_method='qcut', bins=5)
-    t3 = feature_evaluation(df, labels=['d0'], binning_method='qcut', bins=10)
-    t4 = feature_evaluation(df, labels=['d0'], binning_method='qcut', bins=15)
-    t5 = feature_evaluation(df, labels=['d0'], binning_method='cut', bins=5)
-    t6 = feature_evaluation(df, labels=['d0'], binning_method='cut', bins=10)
-    t7 = feature_evaluation(df, labels=['d0'], binning_method='cut', bins=15)
-    print(t1, t2, t3, t4, t5, t6, t7)
+    try:
+        df = pd.read_pickle('utils/iv_test.pkl')
+    except:
+        df = pd.read_pickle('iv_test.pkl')
+    t1 = feature_evaluation(df, labels=['y'], max_depth=3)
+    t2 = feature_evaluation(df, labels=['y'], max_depth=4)
+    t3 = feature_evaluation(df, labels=['y'], max_depth=5)
+    t4 = feature_evaluation(df, labels=['y'], binning_method='qcut', bins=5)
+    t5 = feature_evaluation(df, labels=['y'], binning_method='qcut', bins=10)
+    t6 = feature_evaluation(df, labels=['y'], binning_method='qcut', bins=15)
+    t7 = feature_evaluation(df, labels=['y'], binning_method='cut', bins=5)
+    t8 = feature_evaluation(df, labels=['y'], binning_method='cut', bins=10)
+    t9 = feature_evaluation(df, labels=['y'], binning_method='cut', bins=15)
+    print(t1, t2, t3, t4, t5, t6, t7, t8, t9)
