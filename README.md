@@ -2,6 +2,10 @@
 
 各种小功能。MD5加密，随机数生成等
 
+# operatehdfs
+
+hdfs读取与存储
+
 # feature_explore
 
 即将大规模重构
