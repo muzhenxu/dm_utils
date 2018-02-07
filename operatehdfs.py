@@ -101,6 +101,7 @@ class OperateHdfs(object):
         df_type = df.dtypes.reset_index()
         df_type.columns = ['name', 'data_type']
 
+        # TODO: auto judge feature type, especially for phone num(int but should be str) or others.
         def chtype(s):
             s = re.sub('[\d]+', '', s)
             if s not in ['int', 'float']:
