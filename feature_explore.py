@@ -5,8 +5,6 @@ from utils.mdlp import MDLP
 from utils.woe import WOE
 from collections import defaultdict
 from sklearn import metrics as mr
-import xgboost as xgb
-from sklearn.model_selection import train_test_split
 
 
 def desc_df(df_origin):
@@ -14,17 +12,84 @@ def desc_df(df_origin):
 
     df_desc = pd.DataFrame(df.isnull().sum(axis=0), columns=['null_num'])
     df_desc['notnull_num'] = df.shape[0] - df_desc['null_num']
-    df_desc['null_ratio'] = df_desc['num'] / df.shape[0]
+    df_desc['notnull_ratio'] = df_desc['notnull_num'] / df.shape[0]
 
     nunique_value = df.apply(lambda c: c.nunique())
     df_desc['diff_values_num'] = nunique_value
 
+    # TODO: if a feature is null for every element, below code will raise error.
     same_value = df.apply(lambda c: c.value_counts().iloc[0])
     df_desc['most_value_num'] = same_value
     df_desc['same_ratio'] = same_value / df.shape[0]
 
     return df_desc
 
+
+class data_preprocess(object):
+    def __init__(self, notnull_threshold=100, notsame_threshold=20, drop_duplicates=False, silent=False):
+        """
+
+        :param notnull_threshold: int or float. If int, it is the smallest number of not null values. If float, it is
+                                  the smallest ratio of not null values.
+        :param notsame_threshold: int or float. If int, it is the smallest number of not same values. If float, it is
+                                  the smallest ratio of not same values.
+        :param drop_duplicates:  default False. whether drop duplicates cases or not.
+        :param silent: default False. whether silent print info.
+        """
+        self.notnull_threshold = notnull_threshold
+        self.notsame_threshold = notsame_threshold
+        self.drop_duplicates = drop_duplicates
+        self.silent = silent
+
+    def fit(self, df):
+        df_desc = desc_df(df)
+        if self.notnull_threshold > 1:
+            self.notnan_ratio = self.notnull_threshold / df.shape[0]
+        else:
+            self.notnan_ratio = self.notnan_threshold
+            self.notnull_threshold = int(df.shape[0] * self.notnan_ratio)
+        self.nan_cols = df_desc.index[df_desc.notnull_ratio < self.notnan_ratio]
+
+        if self.notsame_threshold > 1:
+            self.same_ratio = 1 - self.notsame_threshold / df.shape[0]
+        else:
+            self.same_ratio = 1 - self.notsame_threshold
+            self.notsame_threshold = int(df.shape[0] * self.notsame_threshold)
+        self.same_cols = df_desc.index[df_desc.same_ratio > self.same_ratio]
+
+        df = df.drop(self.same_cols, axis=1)
+        df = df.drop(self.nan_cols, axis=1)
+
+        n = df.shape[0]
+        if self.drop_duplicates:
+            df = df.drop_duplicates()
+        m = df.shape[0]
+        self.dup_num = n - m
+
+        if not self.silent:
+            print('columns which all values are nan: ', df_desc.index[df_desc.diff_values_num == 0])
+            print('columns which all values are the same: ', df_desc.index[df_desc.diff_values_num == 1])
+            print('columns which notnull values\' num below %s and nan ratio beyond %s: ' % (
+                self.nan_threshold, self.nan_ratio), self.nan_cols.values)
+            print('columns which not same values\' num below %s and same ratio beyond %s: ' % (
+                self.same_threshold, self.same_ratio), self.same_cols.values)
+            print('%s cases is duplicates.' % (n - m))
+
+        self.df_desc = df_desc
+
+    def transform(self, df):
+        df = df.drop(self.same_cols, axis=1)
+        df = df.drop(self.nan_cols, axis=1)
+
+        n = df.shape[0]
+        if self.drop_duplicates:
+            df = df.drop_duplicates()
+        m = df.shape[0]
+
+        if not self.silent:
+            print('%s cases is duplicates.' % (n - m))
+
+        return df
 
 def del_redundance_cols(df_origin, nan_threshold=100, same_threshold=20, drop_duplicates=False, silent=False):
     """
@@ -140,6 +205,7 @@ def del_duplicate_cols(df_origin, del_cols=True):
     return df
 
 
+# TODO: move to feature_encoding.py
 def woe_translate(df_origin, labels, columns=None, onehot=True, del_origin_columns=False):
     """
     woe encoder
@@ -186,4 +252,3 @@ def woe_translate(df_origin, labels, columns=None, onehot=True, del_origin_colum
     df_iv_nmi = pd.concat([df_iv, df_nmi], axis=1)
 
     return df, df_iv_nmi, dic_cut_points, dic_woe
-
