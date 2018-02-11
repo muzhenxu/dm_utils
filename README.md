@@ -25,7 +25,7 @@
 | `anomaly-detection` | 异常检测 |根据高斯分布计算每行特征概率并返回p值列表 |./anomaly_detection/\*|
 | `hold-out`      | 留出法 | 根据配置（种子，是否乱序，留出比例）对原datafram 进行划分，返回train 与test 集合 |./hold_out/hold_out.py|
 | `train-models`  | 训练模型 | 根据配置（cv 个数，模型列表，各模型参数搜寻列表，评价指标）对留出法中的train 数据集进行训练，得到各类模型中最优模型 |./train_models/\*|
-| `others`  | 其他 | 包含教程及所需数据文件（上传时注意大小，最大文件200KB) |./others/\*|
+| `tutorial`  | 其他 | 包含各方法使用样例及所需数据文件（上传时注意大小，最大文件200KB) |./tutorial/\*|
 
 
 ### 模块详细介绍：
