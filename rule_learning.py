@@ -5,7 +5,7 @@ from collections import defaultdict
 import os
 
 
-def chi2_calc(df_rule, labels, columns=None, save=True, path='datasource/chi2_result/'):
+def chi2_calc(df_rule, labels, columns=None, save=True, path='datasource/chi2_result/', encoding='gbk'):
     if columns is None:
         columns = [c for c in df_rule.columns if c not in labels]
 
@@ -31,6 +31,6 @@ def chi2_calc(df_rule, labels, columns=None, save=True, path='datasource/chi2_re
                 os.makedirs(path)
             for k, df_p in dic_df.items():
                 # df_p.to_pickle(path + f'{k}.pkl')
-                df_p.to_csv(f'{k}.csv', encoding='gbk', index=False)
+                df_p.to_csv(f'{k}.csv', encoding=encoding)
 
     return dic_df
