@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 from collections import Counter
-from utils.mdlp import MDLP
-from utils.woe import WOE
 from collections import defaultdict
-from sklearn import metrics as mr
+import os
 
 
 def desc_df(df_origin):
@@ -23,6 +21,42 @@ def desc_df(df_origin):
     df_desc['same_ratio'] = same_value / df.shape[0]
 
     return df_desc
+
+
+def cover_stats(df, path=None, feature_map_dict=None):
+    data_fg_r = (df.notnull().sum(axis=1) > 0).sum() / df.shape[0]
+
+    t = desc_df(df)
+    t = t[['notnull_ratio']]
+    t.columns = ['覆盖率']
+
+    t['饱和度'] = t['覆盖率'] / data_fg_r
+    if not feature_map_dict:
+        t.index = pd.MultiIndex.from_tuples([(i, feature_map_dict[i]) for i in t.index])
+        t1 = pd.DataFrame(columns=['覆盖率', '饱和度'])
+        t1.ix[('dataset', '全数据集'),] = [data_fg_r, np.nan]
+        t = pd.concat([t1, t], axis=0)
+    else:
+        t1 = pd.DataFrame(columns=['覆盖率', '饱和度'])
+        t1.loc['全数据集'] = [data_fg_r, np.nan]
+        t = pd.concat([t1, t], axis=0)
+
+    if not path:
+        if not os.path.exists('reportsource'):
+            os.mkdir('reportsource')
+        t.to_pickle('reportsource/覆盖率统计.pkl')
+
+
+def target_stats(df_origin, target_cols, path=None):
+    df = df_origin.copy()
+    df['是否匹配上'] = (df.notnull().sum(axis=1) > len(target_cols)).astype(int).replace([1, 0], ['是', '否'])
+
+    t = pd.pivot_table(df, index='是否匹配上', values=target_cols, margins=True)
+
+    if not path:
+        if not os.path.exists('reportsource'):
+            os.mkdir('reportsource')
+    t.to_pickle('reportsource/逾期率统计.pkl')
 
 
 class data_preprocess(object):
@@ -90,6 +124,7 @@ class data_preprocess(object):
             print('%s cases is duplicates.' % (n - m))
 
         return df
+
 
 def del_redundance_cols(df_origin, nan_threshold=100, same_threshold=20, drop_duplicates=False, silent=False):
     """
@@ -203,52 +238,3 @@ def del_duplicate_cols(df_origin, del_cols=True):
         df = df.drop(dups_drop, axis=1)
 
     return df
-
-
-# TODO: move to feature_encoding.py
-def woe_translate(df_origin, labels, columns=None, onehot=True, del_origin_columns=False):
-    """
-    woe encoder
-    :param df_origin:
-    :param columns:
-    :param labels: type: list
-    :return:
-    """
-    df = df_origin.copy()
-    if columns is None:
-        columns = [c for c in df.columns if c not in labels]
-
-    woe = WOE()
-    mdlp = MDLP()
-
-    dic_cut_points = {}
-    dic_woe = {}
-    dic_iv = defaultdict(dict)
-    dic_nmi = defaultdict(dict)
-
-    for c in columns:
-        if df[c].nunique() <= 1:
-            continue
-        for t in labels:
-            dic_cut_points[c] = mdlp.cut_points(np.array(df[c]), np.array(df[t]))
-            df['%s_%s_mdlp' % (c, t)] = mdlp.discretize_feature(df[c], dic_cut_points[c])
-            dic_woe[c], dic_iv[t][c] = woe.woe_single_x(df['%s_%s_mdlp' % (c, t)], df[t])
-            dic_nmi[t][c] = mr.normalized_mutual_info_score(df['%s_%s_mdlp' % (c, t)], df[t])
-            df['%s_%s_woe' % (c, t)] = df['%s_%s_mdlp' % (c, t)].replace(dic_woe[c].keys(), dic_woe[c].values())
-            if onehot:
-                df = pd.concat([df, pd.get_dummies(df['%s_%s_mdlp' % (c, t)], prefix='%s_%s_mdlp' % (c, t))], axis=1)
-
-            if del_origin_columns:
-                del df['%s_%s_mdlp' % (c, t)]
-            print(c, t)
-
-    if del_origin_columns:
-        df = df.drop(columns, axis=1)
-
-    df_iv = pd.DataFrame(dic_iv)
-    df_nmi = pd.DataFrame(dic_nmi)
-    df_iv.columns = [['IV'] * df_iv.shape[1], df_iv.columns]
-    df_nmi.columns = [['NMI'] * df_nmi.shape[1], df_nmi.columns]
-    df_iv_nmi = pd.concat([df_iv, df_nmi], axis=1)
-
-    return df, df_iv_nmi, dic_cut_points, dic_woe

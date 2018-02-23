@@ -323,6 +323,54 @@ class BinningEncoder(object):
         return X
 
 
+# TODO: move to feature_encoding.py
+def woe_translate(df_origin, labels, columns=None, onehot=True, del_origin_columns=False):
+    """
+    woe encoder
+    :param df_origin:
+    :param columns:
+    :param labels: type: list
+    :return:
+    """
+    df = df_origin.copy()
+    if columns is None:
+        columns = [c for c in df.columns if c not in labels]
+
+    woe = WOE()
+    mdlp = MDLP()
+
+    dic_cut_points = {}
+    dic_woe = {}
+    dic_iv = defaultdict(dict)
+    dic_nmi = defaultdict(dict)
+
+    for c in columns:
+        if df[c].nunique() <= 1:
+            continue
+        for t in labels:
+            dic_cut_points[c] = mdlp.cut_points(np.array(df[c]), np.array(df[t]))
+            df['%s_%s_mdlp' % (c, t)] = mdlp.discretize_feature(df[c], dic_cut_points[c])
+            dic_woe[c], dic_iv[t][c] = woe.woe_single_x(df['%s_%s_mdlp' % (c, t)], df[t])
+            dic_nmi[t][c] = mr.normalized_mutual_info_score(df['%s_%s_mdlp' % (c, t)], df[t])
+            df['%s_%s_woe' % (c, t)] = df['%s_%s_mdlp' % (c, t)].replace(dic_woe[c].keys(), dic_woe[c].values())
+            if onehot:
+                df = pd.concat([df, pd.get_dummies(df['%s_%s_mdlp' % (c, t)], prefix='%s_%s_mdlp' % (c, t))], axis=1)
+
+            if del_origin_columns:
+                del df['%s_%s_mdlp' % (c, t)]
+            print(c, t)
+
+    if del_origin_columns:
+        df = df.drop(columns, axis=1)
+
+    df_iv = pd.DataFrame(dic_iv)
+    df_nmi = pd.DataFrame(dic_nmi)
+    df_iv.columns = [['IV'] * df_iv.shape[1], df_iv.columns]
+    df_nmi.columns = [['NMI'] * df_nmi.shape[1], df_nmi.columns]
+    df_iv_nmi = pd.concat([df_iv, df_nmi], axis=1)
+
+    return df, df_iv_nmi, dic_cut_points, dic_woe
+
 # TODO: hashencoder
 # import hashlib
 # class HashingEncoder(object):

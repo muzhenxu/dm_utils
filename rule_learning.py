@@ -4,6 +4,7 @@ from sklearn import feature_selection
 from collections import defaultdict
 import os
 import math
+from sklearn.metrics import classification_report
 
 def chi2_calc(df_rule, labels, columns=None, save=True, path='datasource/chi2_result/', encoding='gbk'):
     if columns is None:
@@ -351,6 +352,7 @@ if __name__ == '__main__':
     df = pd.read_pickle('../data/process_data.pkl')
     labels = df.pop('14d')
     df = df.fillna(-999)
-    rp = ripperk()
+    rp = Ripperk()
     rp.fit(df, labels)
     pred = rp.predict(df)
+    print(classification_report(labels, pred))
