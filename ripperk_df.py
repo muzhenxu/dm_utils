@@ -1,41 +1,8 @@
 import pandas as pd
 import numpy as np
-from sklearn import feature_selection
-from collections import defaultdict
-import os
 import math
 
-def chi2_calc(df_rule, labels, columns=None, save=True, path='datasource/chi2_result/', encoding='gbk'):
-    if columns is None:
-        columns = [c for c in df_rule.columns if c not in labels]
-
-    dic_df = {}
-    for t in labels:
-        dic = defaultdict(dict)
-        l = np.array((df_rule[t] > 0).astype(int))
-        for c in columns:
-            dic['命中样本数'][c] = df_rule[c].sum()
-            dic['命中样本占比'][c] = df_rule[c].mean()
-            dic['命中样本%s逾期率' % t][c] = l[np.where(df_rule[c] == 1)].mean()
-            dic['未命中样本%s逾期率' % t][c] = l[np.where(df_rule[c] == 0)].mean()
-            dic['总样本%s逾期率' % t][c] = l.mean()
-            dic['p值'][c] = feature_selection.chi2(df_rule[c].reshape(-1, 1), l)[1][0]
-
-        df_p = pd.DataFrame(dic)
-        df_p = df_p[['总样本%s逾期率' % t, '命中样本%s逾期率' % t, '未命中样本%s逾期率' % t, 'p值', '命中样本占比', '命中样本数']].sort_values('p值')
-
-        dic_df[f'rule_chi2_{t}'] = df_p
-
-        if save:
-            if not os.path.exists(path):
-                os.makedirs(path)
-            for k, df_p in dic_df.items():
-                # df_p.to_pickle(path + f'{k}.pkl')
-                df_p.to_csv(f'{k}.csv', encoding=encoding)
-
-    return dic_df
-
-class Ripperk(object):
+class ripperk(object):
     def __init__(self, prun_ratio=0.2, dl_threshold=64, k=2, sample_threshold=100, diff_threshold=0.0):
         self.prun_ratio = prun_ratio
         self.dl_threshold = dl_threshold
@@ -45,7 +12,7 @@ class Ripperk(object):
 
     def fit(self, df, label):
         self.rulesets = {}
-
+        
         self._get_conditions(df)
 
         items =  list(label.value_counts().sort_values(ascending=False).index)
@@ -56,7 +23,7 @@ class Ripperk(object):
             item = items.pop()
             pos = df[label==item]
             neg = df[label!=item]
-
+            
             ruleset = self.irep(pos, neg)
 
             for _ in range(self.k):
@@ -86,7 +53,7 @@ class Ripperk(object):
 
         while pos.shape[0] > 0:
             print('rule:', rule, len(pos), len(neg))
-
+            
             pos_chunk = int((1 - self.prun_ratio) * pos.shape[0])
             neg_chunk = int((1 - self.prun_ratio) * neg.shape[0])
 
@@ -138,15 +105,15 @@ class Ripperk(object):
         n1 = np.sum(self.bindings(neg, ruleset))
 
         ruleset.pop()
-
+        
         if p1 < self.sample_threshold:
             return -10000
-
+        
         if p0 == 0:
             d0 = 0
         else:
             d0 = float(p0) / (float(p0) + float(n0))
-
+        
         if p1 == 0:
             d1 = 0
         else:
@@ -166,11 +133,11 @@ class Ripperk(object):
         while True:
             max_gain = -10000
             max_condition = None
-
+            
             for condition in self.conditions:
                 if condition[0] in rule:
                     continue
-
+                    
                 gain = self.foil(pos, neg, condition, rule, ruleset)
                 if max_gain < gain:
                     max_gain = gain
@@ -187,7 +154,7 @@ class Ripperk(object):
             if np.sum(self.bindings(neg, ruleset)) == 0:
                 ruleset.pop()
                 return rule
-
+            
             ruleset.pop()
 
     def prun_rule(self, pos, neg, rule, ruleset=None):
@@ -198,43 +165,43 @@ class Ripperk(object):
         tmp_rule = dict(rule)
         # Append the rule to the rules list.
         ruleset.append(tmp_rule)
-
+        
         p = np.sum(self.bindings(pos, ruleset))
         n = np.sum(self.bindings(neg, ruleset))
-
+        
         # TODO: 无效rule为何不直接返回空dict{}
         if p == 0 and n == 0:
             ruleset.pop()
             return tmp_rule
-
+        
         max_rule = dict(tmp_rule)
         max_score = (p - n) / float(p + n)
-
+        
         keys = list(max_rule.keys())
         i = -1
-
+        
         while len(tmp_rule.keys()) > 1:
             # Remove the last attribute.
             # 这里的删减是有序的。但是grow过程的condtition学习真的可以保证先学到的比后学到的好么？
             del tmp_rule[keys[i]]
-
+            
             # Recalculate score.
             p = np.sum(self.bindings(pos, ruleset))
             n = np.sum(self.bindings(neg, ruleset))
-
+            
             tmp_score = (p - n) / float(p + n)
-
+            
             # We found a new max score, save rule.
             if tmp_score > max_score:
                 max_rule = dict(tmp_rule)
                 max_score = tmp_score
-
+        
             i -= 1
-
+        
         # Remove the rule from the rules list.
         ruleset.pop()
-
-        return max_rule
+        
+        return max_rule        
 
     def optimize(self, pos, neg, ruleset):
         new_ruleset = list(ruleset)
@@ -276,9 +243,9 @@ class Ripperk(object):
                 # Don't allow duplicates.
                 if not rule in new_ruleset:
                     new_ruleset.insert(i, rule)
-
+            
             i+= 1
-
+        
         return new_ruleset
 
     def dl(self, rule):
@@ -314,11 +281,11 @@ class Ripperk(object):
             for v in r:
                 conditions.append((c, ('>=', v)))
                 conditions.append((c, ('<=', v)))
-
+                
         for c in category_cols:
             for v in df[c].unique():
                 conditions.append((c, ('>=', v)))
-                conditions.append((c, ('<=', v)))
+                conditions.append((c, ('<=', v)))            
 
         self.conditions = conditions
         self.init_dl = len(conditions)
