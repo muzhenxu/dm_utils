@@ -25,7 +25,12 @@ from utils import visualize
 from utils.psi import Psi
 from utils.rule_learning import Ripperk
 from sklearn.metrics import classification_report
-target_cols = ['0d', '1d', '3d', '7d', '14d', '30d']
+from utils import rule_learning
+
+from IPython.core.interactiveshell import InteractiveShell
+InteractiveShell.ast_node_interactivity = "all"
+
+target_cols = ['00d', '01d', '03d', '07d', '14d', '30d']
 
 datapath = 'datasource/'
 mtlpath = path + '/mtlsource/'

@@ -6,7 +6,7 @@ import os
 import math
 from sklearn.metrics import classification_report
 
-def chi2_calc(df_rule, labels, columns=None, save=True, path='datasource/chi2_result/', encoding='gbk'):
+def chi2_calc(df_rule, labels, columns=None, save=True, path='reportsource/'):
     if columns is None:
         columns = [c for c in df_rule.columns if c not in labels]
 
@@ -25,24 +25,25 @@ def chi2_calc(df_rule, labels, columns=None, save=True, path='datasource/chi2_re
         df_p = pd.DataFrame(dic)
         df_p = df_p[['总样本%s逾期率' % t, '命中样本%s逾期率' % t, '未命中样本%s逾期率' % t, 'p值', '命中样本占比', '命中样本数']].sort_values('p值')
 
-        dic_df[f'rule_chi2_{t}'] = df_p
+        dic_df[path + f'二值特征判别能力分析与卡方检验_{t}'] = df_p
 
         if save:
             if not os.path.exists(path):
                 os.makedirs(path)
-            for k, df_p in dic_df.items():
+            for fn, df_p in dic_df.items():
                 # df_p.to_pickle(path + f'{k}.pkl')
-                df_p.to_csv(f'{k}.csv', encoding=encoding)
+                df_p.to_pickle(f'{fn}.pkl')
 
     return dic_df
 
 class Ripperk(object):
-    def __init__(self, prun_ratio=0.2, dl_threshold=64, k=2, sample_threshold=100, diff_threshold=0.0):
+    def __init__(self, prun_ratio=0.2, dl_threshold=64, k=2, sample_threshold=100, diff_threshold=0.0, q=10):
         self.prun_ratio = prun_ratio
         self.dl_threshold = dl_threshold
         self.k = k
         self.sample_threshold = sample_threshold
         self.diff_threshold = diff_threshold
+        self.q = q
 
     def fit(self, df, label):
         self.rulesets = {}
@@ -299,11 +300,24 @@ class Ripperk(object):
 
     def _get_conditions(self, df):
         s = df.dtypes
+
+        # 如果一列在训练集中只出现两个值，而在测试集中出现第三个值，那么不考虑第三个值，我觉得是合理的。毕竟未见的本就不好归类
+        binary_cols = []
+        for c in df.columns:
+            if df[c].nunique() == 2:
+                binary_cols.append(c)
+
         discrete_cols = list(s.index[s=='object'])
+        discrete_cols = [c for c in discrete_cols if c not in binary_cols]
+
         category_cols = list(s.index[s=='category'])
-        continuous_cols = [i for i in df.columns if i not in discrete_cols + category_cols]
+        continuous_cols = [i for i in df.columns if i not in discrete_cols + category_cols + binary_cols]
 
         conditions = []
+
+        for c in binary_cols:
+            for v in df[c].unique():
+                conditions.append((c, ('==', v)))
 
         for c in discrete_cols:
             for v in df[c].unique():
@@ -311,7 +325,7 @@ class Ripperk(object):
                 conditions.append((c, ('!=', v)))
 
         for c in continuous_cols:
-            _, r = pd.qcut(df[c], q=100, retbins=True, duplicates='drop')
+            _, r = pd.qcut(df[c], q=self.q, retbins=True, duplicates='drop')
             for v in r:
                 conditions.append((c, ('>=', v)))
                 conditions.append((c, ('<=', v)))
@@ -320,6 +334,7 @@ class Ripperk(object):
             for v in df[c].unique():
                 conditions.append((c, ('>=', v)))
                 conditions.append((c, ('<=', v)))
+
 
         self.conditions = conditions
         self.init_dl = len(conditions)

@@ -31,7 +31,7 @@ def cover_stats(df, path=None, feature_map_dict=None):
     t.columns = ['覆盖率']
 
     t['饱和度'] = t['覆盖率'] / data_fg_r
-    if not feature_map_dict:
+    if feature_map_dict:
         t.index = pd.MultiIndex.from_tuples([(i, feature_map_dict[i]) for i in t.index])
         t1 = pd.DataFrame(columns=['覆盖率', '饱和度'])
         t1.ix[('dataset', '全数据集'),] = [data_fg_r, np.nan]
@@ -44,7 +44,8 @@ def cover_stats(df, path=None, feature_map_dict=None):
     if not path:
         if not os.path.exists('reportsource'):
             os.mkdir('reportsource')
-        t.to_pickle('reportsource/覆盖率统计.pkl')
+    t.to_pickle('reportsource/覆盖率统计.pkl')
+    return t
 
 
 def target_stats(df_origin, target_cols, path=None):
@@ -56,7 +57,9 @@ def target_stats(df_origin, target_cols, path=None):
     if not path:
         if not os.path.exists('reportsource'):
             os.mkdir('reportsource')
+
     t.to_pickle('reportsource/逾期率统计.pkl')
+    return t
 
 
 class data_preprocess(object):
