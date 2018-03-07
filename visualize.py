@@ -78,42 +78,14 @@ def roc_curve(y_true, y_pred, ax, label_type='', color='darkorange', loc=4):
     ax.legend(loc=loc)
 
 
-def ks_curve(y_true, y_pred, ax, bins=1000):
+def ks_curve(y_true, y_pred, ax):
     df = pd.DataFrame()
     df['y_true'] = np.array(y_true)
     df['y_pred'] = np.array(y_pred)
     df = df.sort_values('y_pred', ascending=False)
 
-    if df.shape[0] > bins:
-        step = int(df.shape[0] / bins)
-    else:
-        step = 1
-
-    pos_num = df['y_true'].sum()
-    neg_num = df.shape[0] - pos_num
-    prob = []
-    pos = []
-    neg = []
-    ks = []
-
-    for i in range(0, df.shape[0], step):
-        temp = df.iloc[:i, :]
-        p_l = temp[(temp['y_true'] == 1)].shape[0]
-        n_l = temp[(temp['y_true'] == 0)].shape[0]
-        pos.append(p_l / pos_num)
-        neg.append(n_l / neg_num)
-        prob.append(i / df.shape[0])
-        ks.append(pos[-1] - neg[-1])
-
-    if i < df.shape[0]:
-        i = df.shape[0]
-        temp = df.iloc[:i, :]
-        p_l = temp[(temp['y_true'] == 1)].shape[0]
-        n_l = temp[(temp['y_true'] == 0)].shape[0]
-        pos.append(p_l / pos_num)
-        neg.append(n_l / neg_num)
-        prob.append(i / df.shape[0])
-        ks.append(pos[-1] - neg[-1])
+    neg, pos, thr = mr.roc_curve(df.y_true, df.y_pred)
+    prob = [sum((df['y_pred'] >= i)) / df.shape[0] for i in thr]
 
     threshold = prob[np.argmax(np.array(pos) - np.array(neg))]
     #     max_ks = np.max(np.array(pos) - np.array(neg))
@@ -168,12 +140,12 @@ def boost_hist_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, 
     ax2.legend(loc="upper right")
 
 
-def eva_plot(y_true, y_pred, bins=1000, path=None, target=None, cut_points=None, rotation=55):
+def eva_plot(y_true, y_pred, path=None, target=None, cut_points=None, rotation=55):
     plt.figure(figsize=(8, 8))
     ax = plt.subplot(221)
     roc_curve(y_true, y_pred, ax)
     ax = plt.subplot(222)
-    ks_curve(y_true, y_pred, ax, bins=bins)
+    ks_curve(y_true, y_pred, ax)
     ax = plt.subplot(223)
     pr_curve(y_true, y_pred, ax)
     ax = plt.subplot(224)
