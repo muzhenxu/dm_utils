@@ -19,7 +19,7 @@ from utils import feature_evaluation
 from utils.operatehdfs import OperateHdfs
 from utils import feature_evaluation
 from utils import feature_explore
-from utils.model_evaluation import xgb_model_evaluation
+from utils.model_evaluation import xgb_model_evaluation, params
 from utils import data_utils
 from utils import visualize
 from utils.psi import Psi
