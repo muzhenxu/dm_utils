@@ -85,11 +85,15 @@ def ks_curve(y_true, y_pred, ax):
     df = df.sort_values('y_pred', ascending=False)
 
     neg, pos, thr = mr.roc_curve(df.y_true, df.y_pred)
-    prob = [sum((df['y_pred'] >= i)) / df.shape[0] for i in thr]
+    ks = pos - neg
+    t = sorted(df['y_pred'])
+    s = len(df['y_pred'])
+    # prob = [sum((df['y_pred'] >= i)) / df.shape[0] for i in thr]
+    prob = [0] + [1 - (t.index(i) + 1) / s for i in thr[1:]]
 
     threshold = prob[np.argmax(np.array(pos) - np.array(neg))]
-    #     max_ks = np.max(np.array(pos) - np.array(neg))
-    max_ks = ks_2samp(df['y_pred'][df['y_true'] == 1], df['y_pred'][df['y_true'] == 0])[0]
+    max_ks = np.max(np.array(pos) - np.array(neg))
+    best_thr = thr[np.argmax(np.array(pos) - np.array(neg))]
 
     lw = 2
     ax.plot(prob, pos, color='darkorange',
@@ -98,12 +102,12 @@ def ks_curve(y_true, y_pred, ax):
             lw=lw, label='FPR')
     ax.plot(prob, ks, color='darkred',
             lw=lw, label='KS (%0.2f)' % max_ks)
-    ax.plot([threshold, threshold], [0, 1], color='lightgreen', lw=lw, linestyle='--',
-            label='threshold (%0.2f)' % threshold)
+    ax.plot([threshold, threshold], [0, 1], lw=lw, linestyle='--',
+             label=' best passing rate (%0.0f%%)\n(best threshold = %0.2f)' % (threshold * 100, best_thr))
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
     ax.set_title('K-S curve')
-    ax.legend(loc="upper left")
+    ax.legend(loc='best')
     return threshold, max_ks
 
 
