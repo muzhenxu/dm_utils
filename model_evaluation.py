@@ -87,6 +87,7 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
         train_y = target
         test = test
         test_y = test_y
+        test_size = 1
 
     dic_cv = []
 
@@ -111,18 +112,29 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
                 dic_res = {'train_auc': roc_auc_score(tra_y, bst.predict(xgb.DMatrix(tra))),
                            'val_auc': roc_auc_score(val_y, bst.predict(xgb.DMatrix(val))),
                            'test auc': roc_auc_score(test_y, temp)}
-                print(dic_res)
-                dic_cv.append(dic_res)
+            else:
+                dic_res = {'train_auc': roc_auc_score(tra_y, bst.predict(xgb.DMatrix(tra))),
+                           'val_auc': roc_auc_score(val_y, bst.predict(xgb.DMatrix(val)))}
+            print(dic_res)
+            dic_cv.append(dic_res)
 
     dtr = xgb.DMatrix(train)
-    dvalid = xgb.DMatrix(test, test_y)
     dtrain = xgb.DMatrix(train, train_y)
+
+    if test_size == 0:
+        dvalid = xgb.DMatrix(train, train_y)
+    else:
+        dvalid = xgb.DMatrix(test, test_y)
+
     watchlist = [(dtrain, 'train'), (dvalid, 'eval')]
     bst = xgb.train(params, dtrain, num_rounds, watchlist, early_stopping_rounds=early_stopping_rounds,
                     verbose_eval=verbose_eval)
 
-    pred_test = bst.predict(dtest)
-    df_test = pd.DataFrame({col_name: test_y, 'y_pred': pred_test})
+    if test_size > 0:
+        pred_test = bst.predict(dtest)
+        df_test = pd.DataFrame({col_name: test_y, 'y_pred': pred_test})
+    else:
+        df_test = None
     pred_train = bst.predict(dtr)
     df_train = pd.DataFrame({col_name: train_y, 'y_pred': pred_train})
 

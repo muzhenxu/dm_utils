@@ -1,7 +1,5 @@
-import sys
 import os
 path = os.path.join(os.path.abspath('').rsplit('knjk', 1)[0], 'knjk')
-sys.path.append(path)
 import pandas as pd
 import numpy as np
 import datetime
@@ -15,17 +13,18 @@ import json
 import pyecharts
 from collections import defaultdict
 
-from utils import feature_evaluation
-from utils.operatehdfs import OperateHdfs
-from utils import feature_evaluation
-from utils import feature_explore
-from utils.model_evaluation import xgb_model_evaluation, params
-from utils import data_utils
-from utils import visualize
-from utils.psi import Psi
-from utils.rule_learning import Ripperk
+from . import feature_evaluation
+from .operatehdfs import OperateHdfs
+from . import feature_evaluation
+from . import feature_explore
+from .model_evaluation import xgb_model_evaluation, params
+from . import data_utils
+from . import visualize
+from .psi import Psi
+from .rule_learning import Ripperk
 from sklearn.metrics import classification_report
-from utils import rule_learning
+from . import rule_learning
+from sklearn import metrics  as mr
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
