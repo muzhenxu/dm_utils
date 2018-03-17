@@ -1,8 +1,5 @@
 import os
-import sys
 
-path = os.path.join(os.path.abspath('').rsplit('knjk', 1)[0], 'knjk')
-sys.path.append(path)
 import subprocess
 from sklearn.tree import export_graphviz
 import matplotlib.pyplot as plt
@@ -11,7 +8,7 @@ from scipy.stats import ks_2samp
 import pandas as pd
 import numpy as np
 import traceback
-from utils import feature_evaluation
+from . import feature_evaluation
 
 
 def visualize_tree(dt, path=None, feature_names=None):
