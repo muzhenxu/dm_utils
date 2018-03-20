@@ -17,6 +17,7 @@ from . import feature_evaluation
 from .operatehdfs import OperateHdfs
 from . import feature_evaluation
 from . import feature_explore
+from . import feature_encoding
 from .model_evaluation import xgb_model_evaluation, params
 from . import data_utils
 from . import visualize
@@ -24,6 +25,7 @@ from .psi import Psi
 from .rule_learning import Ripperk
 from sklearn.metrics import classification_report
 from . import rule_learning
+from . import facets
 from sklearn import metrics  as mr
 
 from IPython.core.interactiveshell import InteractiveShell

@@ -24,8 +24,12 @@ hdfs读取与存储
 
 # rule_learning
 
-规则学习，空白状态，只有卡方计算
+规则学习: 卡方评估，ripperk学习
 
 # visualize
 
 可视化模块，包含roc，ks，f1， 排序图以及决策树可视化
+
+# facets
+
+facets封装
