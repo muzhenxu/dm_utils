@@ -237,6 +237,9 @@ def eva_plot(data, bins=10, figsize=(14, 16), path=None, cut_points=None, save_f
             y_true, y_pred = v[0], v[1]
             if label == 'train':
                 _, cut_points = pd.qcut(y_pred, q=10, retbins=True)
+                cut_points = list(cut_points)[1:-1]
+                cut_points.append(np.inf)
+                cut_points.insert(0, -np.inf)
                 break
 
                 # f, axes = plt.subplots(4, len(data), figsize=figsize)
@@ -251,9 +254,6 @@ def eva_plot(data, bins=10, figsize=(14, 16), path=None, cut_points=None, save_f
                 #
                 #     i += 1
                 # plt.tight_layout()
-
-            #     gs = gridspec.GridSpec(4, 2,width_ratios=[1,2],height_ratios=[1,1,1,1])
-            #     gs.update(left=0.05, right=0.48, wspace=0.05)
     fig2 = plt.figure(figsize=figsize)
     spec2 = gridspec.GridSpec(4, 2)
     ax1 = fig2.add_subplot(spec2[0, 0])
@@ -346,7 +346,7 @@ def profit_line(y_true, y_pred, ax, label='', cost_model=1, rule_pass=0.95, gain
     # 使用以下方法存在一个风险，可能把相同得分的样本分割到两侧
     passrate = []
     delayrate = []
-    span = 100 / bins
+    span = 100 // bins
     for i in range(0, 101, span):
         passrate.append(i / 100)
         if i == 0:
@@ -399,7 +399,7 @@ def pass_overdue_line(y_true, y_pred, ax, spec_p=None, label='', loc='best', bin
     # 按bins切分，但是可能出现同一个值被分到两侧的情况
     passrate = []
     delayrate = []
-    span = 100 / bins
+    span = 100 // bins
     for i in range(0, 101, span):
         passrate.append(i / 100)
         if i == 0:

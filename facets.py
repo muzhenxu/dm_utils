@@ -8,7 +8,7 @@ from IPython.core.display import display, HTML
 def facets_overview(proto, mem_control=1000):
     mem_total = 0
     for dic in proto:
-        mem = dic['table'] = df.memory_usage(deep=True).sum() / (1024 ** 2)
+        mem = dic['table'].memory_usage(deep=True).sum() / (1024 ** 2)
         print(dic['name'], 'occupies ', mem, 'M memory')
         mem_total += mem
     print('Whole data occupy %sM memory' % mem_total)

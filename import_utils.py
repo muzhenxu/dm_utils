@@ -27,6 +27,7 @@ from sklearn.metrics import classification_report
 from . import rule_learning
 from . import facets
 from sklearn import metrics  as mr
+from sklearn.cross_validation import train_test_split
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
