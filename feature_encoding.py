@@ -31,11 +31,11 @@ def dt_cut_points(x, y, max_depth=4, min_samples_leaf=0.05, max_leaf_nodes=None,
     return sorted(th[np.where(f != -2)])
 
 
-def get_cut_points(X, y=None, bins=10, binning_method='dt', **kwargs):
+def get_cut_points(X, y=None, bins=10, binning_method='dt', precision=8, **kwargs):
     if binning_method == 'cut':
-        _, cut_points = pd.cut(X, bins=bins, retbins=True)
+        _, cut_points = pd.cut(X, bins=bins, retbins=True, precision=precision)
     elif binning_method == 'qcut':
-        _, cut_points = pd.qcut(X, q=bins, retbins=True, duplicates='drop')
+        _, cut_points = pd.qcut(X, q=bins, retbins=True, duplicates='drop', precision=precision)
     elif binning_method == 'dt':
         cut_points = dt_cut_points(X, y, **kwargs)
     else:
@@ -280,21 +280,7 @@ class binningencoder(object):
         if self.labels is not None and len(self.labels) != self.bins:
             raise ValueError('the length of labels must be equal to bins.')
 
-        if self.binning_method == 'cut':
-            _, self.cut_points = pd.cut(X, bins=self.bins, retbins=True)
-        elif self.binning_method == 'qcut':
-            _, self.cut_points = pd.qcut(X, q=self.bins, retbins=True, duplicates='drop')
-        elif self.binning_method == 'dt':
-            self.cut_points = dt_cut_points(X, y, **self.kwargs)
-        else:
-            raise ValueError("binning_method: '%s' is not defined." % self.binning_method)
-
-        if self.binning_method != 'dt':
-            self.cut_points = self.cut_points[1:-1]
-
-        self.cut_points = list(self.cut_points)
-        self.cut_points.append(np.inf)
-        self.cut_points.insert(0, -np.inf)
+        self.cut_points = get_cut_points(X, y, self.bins, self.binning_method, **self.kwargs)
 
         if self.interval:
             self.labels = np.arange(len(self.cut_points) - 1)

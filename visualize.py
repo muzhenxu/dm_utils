@@ -115,7 +115,7 @@ def roc_curve(data, ax):
         y_true, y_pred = v[0], v[1]
         roc_line(y_true, y_pred, ax, label=label)
 
-
+# deprecated
 def boost_hist_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, method='avg', cut_points=None,
                      rotation=55):
     if target is None:
@@ -236,7 +236,7 @@ def eva_plot(data, bins=10, figsize=(14, 16), path=None, cut_points=None, save_f
         for label, v in data.items():
             y_true, y_pred = v[0], v[1]
             if label == 'train':
-                _, cut_points = pd.qcut(y_pred, q=10, retbins=True)
+                _, cut_points = pd.qcut(y_pred, q=10, retbins=True, precision=8)
                 cut_points = list(cut_points)[1:-1]
                 cut_points.append(np.inf)
                 cut_points.insert(0, -np.inf)
