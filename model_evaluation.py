@@ -65,6 +65,7 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     # except:
     #     col_name = 'y_true'
     col_name = 'y_true'
+    best_iteration = 0
 
     df = df
     target = target
@@ -107,6 +108,9 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
             bst = xgb.train(params, dtrain, num_rounds, watchlist, early_stopping_rounds=early_stopping_rounds,
                             verbose_eval=cv_verbose_eval)
 
+            print('best_iteration: ', bst.best_iteration)
+            best_iteration += bst.best_iteration
+
             if test_size > 0:
                 temp = bst.predict(dtest)
                 dic_res = {'train_auc': roc_auc_score(tra_y, bst.predict(xgb.DMatrix(tra))),
@@ -123,11 +127,14 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
 
     if test_size == 0:
         dvalid = xgb.DMatrix(train, train_y)
+        best_iteration = best_iteration // n_folds + 1
     else:
         dvalid = xgb.DMatrix(test, test_y)
+        best_iteration /= n_folds
+        best_iteration = 20000
 
     watchlist = [(dtrain, 'train'), (dvalid, 'eval')]
-    bst = xgb.train(params, dtrain, num_rounds, watchlist, early_stopping_rounds=early_stopping_rounds,
+    bst = xgb.train(params, dtrain, num_boost_round=best_iteration, evals=watchlist, early_stopping_rounds=early_stopping_rounds,
                     verbose_eval=verbose_eval)
 
     if test_size > 0:
