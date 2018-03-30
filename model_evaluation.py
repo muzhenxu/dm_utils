@@ -59,7 +59,7 @@ params_linear = {
 
 def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_folds=5, test_size=0.2, random_state=7,
                          early_stopping_rounds=100, num_rounds=50000, cv_verbose_eval=False, verbose_eval=True,
-                         pn_ratio=None):
+                         oversample=False):
     # try:
     #     col_name = target.name
     # except:
@@ -70,14 +70,13 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     df = df
     target = target
 
-    if pn_ratio is None:
-        pn_ratio = np.sum(target == 0) / np.sum(target == 1)
-
     if params == 'gbtree':
         params = params_tree
-        params['scale_pos_weight'] = pn_ratio
     elif params == 'gblinear':
         params = params_linear
+
+    if oversample:
+        pn_ratio = np.sum(target == 0) / np.sum(target == 1)
         params['scale_pos_weight'] = pn_ratio
 
     if (test is None) & (test_y is None):

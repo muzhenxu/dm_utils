@@ -12,6 +12,7 @@ from scipy.stats import ks_2samp
 import json
 import pyecharts
 from collections import defaultdict
+from sklearn.externals import joblib
 
 from . import feature_evaluation
 from .operatehdfs import OperateHdfs
