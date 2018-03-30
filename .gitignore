@@ -1,4 +1,5 @@
 *.pyc
-__pycache__
+__pycache__/
 .idea
 .ipynb_checkpoints
+facets_utils/__pycache__/
