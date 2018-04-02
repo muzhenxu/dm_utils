@@ -3,6 +3,8 @@ import hashlib
 import random
 import os
 import pandas as pd
+import json
+import numpy as np
 
 def md5(s):
     m = hashlib.md5()
@@ -21,3 +23,16 @@ def merge_report(reportpath='reportsource/'):
             sheet = pd.read_pickle(reportpath + f)
             sheet.to_excel(writer, sheet_name=f[:-4], encoding='gbk')
     writer.save()
+
+
+def get_model_data(s, method='response',  key='score'):
+    if method == 'response':
+        try:
+            return json.loads(s)['data'][key]
+        except:
+            return np.nan
+    elif method == 'request':
+        try:
+            return json.loads(s)[key]
+        except:
+            return np.nan

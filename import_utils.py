@@ -12,6 +12,7 @@ from scipy.stats import ks_2samp
 import json
 import pyecharts
 from collections import defaultdict
+from sklearn.externals import joblib
 
 from . import feature_evaluation
 from .operatehdfs import OperateHdfs
@@ -27,7 +28,8 @@ from sklearn.metrics import classification_report
 from . import rule_learning
 from . import facets
 from sklearn import metrics  as mr
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
+import xgboost as xgb
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
