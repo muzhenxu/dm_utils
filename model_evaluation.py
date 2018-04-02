@@ -127,10 +127,14 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     if test_size == 0:
         dvalid = xgb.DMatrix(train, train_y)
         best_iteration = best_iteration // n_folds + 1
+        early_stopping_rounds = 0
     else:
         dvalid = xgb.DMatrix(test, test_y)
-        best_iteration /= n_folds
-        best_iteration = 20000
+        try:
+            best_iteration = best_iteration // n_folds + 1
+            early_stopping_rounds = 0
+        except:
+            best_iteration = 20000
 
     watchlist = [(dtrain, 'train'), (dvalid, 'eval')]
     bst = xgb.train(params, dtrain, num_boost_round=best_iteration, evals=watchlist, early_stopping_rounds=early_stopping_rounds,
