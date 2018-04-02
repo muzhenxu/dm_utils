@@ -59,24 +59,24 @@ params_linear = {
 
 def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_folds=5, test_size=0.2, random_state=7,
                          early_stopping_rounds=100, num_rounds=50000, cv_verbose_eval=False, verbose_eval=True,
-                         pn_ratio=None):
+                         oversample=False):
     # try:
     #     col_name = target.name
     # except:
     #     col_name = 'y_true'
     col_name = 'y_true'
+    best_iteration = 0
 
     df = df
     target = target
 
-    if pn_ratio is None:
-        pn_ratio = np.sum(target == 0) / np.sum(target == 1)
-
     if params == 'gbtree':
         params = params_tree
-        params['scale_pos_weight'] = pn_ratio
     elif params == 'gblinear':
         params = params_linear
+
+    if oversample:
+        pn_ratio = np.sum(target == 0) / np.sum(target == 1)
         params['scale_pos_weight'] = pn_ratio
 
     if (test is None) & (test_y is None):
@@ -107,6 +107,9 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
             bst = xgb.train(params, dtrain, num_rounds, watchlist, early_stopping_rounds=early_stopping_rounds,
                             verbose_eval=cv_verbose_eval)
 
+            print('best_iteration: ', bst.best_iteration)
+            best_iteration += bst.best_iteration
+
             if test_size > 0:
                 temp = bst.predict(dtest)
                 dic_res = {'train_auc': roc_auc_score(tra_y, bst.predict(xgb.DMatrix(tra))),
@@ -123,11 +126,14 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
 
     if test_size == 0:
         dvalid = xgb.DMatrix(train, train_y)
+        best_iteration = best_iteration // n_folds + 1
     else:
         dvalid = xgb.DMatrix(test, test_y)
+        best_iteration /= n_folds
+        best_iteration = 20000
 
     watchlist = [(dtrain, 'train'), (dvalid, 'eval')]
-    bst = xgb.train(params, dtrain, num_rounds, watchlist, early_stopping_rounds=early_stopping_rounds,
+    bst = xgb.train(params, dtrain, num_boost_round=best_iteration, evals=watchlist, early_stopping_rounds=early_stopping_rounds,
                     verbose_eval=verbose_eval)
 
     if test_size > 0:
