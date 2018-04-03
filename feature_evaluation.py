@@ -33,7 +33,7 @@ def woe_iv(x, y, event=1, **kwargs):
     x = np.array(x)
     y = np.array(y)
 
-    enc = feature_encoding.BinningEncoder(**kwargs)
+    enc = feature_encoding.binningencoder(**kwargs)
     enc.fit(x, y)
     x = enc.transform(x)
 
