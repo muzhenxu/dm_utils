@@ -150,7 +150,7 @@ def boost_hist_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, 
     ax2.legend(loc="upper right")
 
 
-def sorting_ability(y_true, y_pred, ax, cut_points=None, label='', width=0.5, bins=10, loc='best'):
+def sorting_ability(y_true, y_pred, ax, cut_points=None, label='', width=0.5, bins=10, loc='best', plt_label='overdue rate'):
     df = sta_groups(y_true, y_pred, bins=bins, cut_points=cut_points)
 
     ax1 = ax
@@ -164,11 +164,11 @@ def sorting_ability(y_true, y_pred, ax, cut_points=None, label='', width=0.5, bi
 
     # 折线图
     plt_y = round(df.single_overdue_rate, 3) * 100
-    ax1.plot(plt_x, plt_y, linestyle='--', label='overdue rate', marker='o', markersize=5)
+    ax1.plot(plt_x, plt_y, linestyle='--', label=plt_label, marker='o', markersize=5)
     upper1 = np.max(plt_y) * 1.2
 
     plt_y = round(df.acc_overdue_rate, 3) * 100
-    ax1.plot(plt_x, plt_y, linestyle='--', label='accumulate overdue rate', marker='o', markersize=5)
+    ax1.plot(plt_x, plt_y, linestyle='--', label='accumulate ' + plt_label, marker='o', markersize=5)
 
     ax1.set_xlabel('Groups(good -> bad)')  # fontsize使用方法和plt.xlabel()中一样
     ax1.set_ylabel('Percentage(%)')
@@ -184,14 +184,14 @@ def sorting_ability(y_true, y_pred, ax, cut_points=None, label='', width=0.5, bi
     ax1.set_title(f'{label} dataset sorting ability')
 
 
-def plot_acc_od_ps_rc(y_true, y_pred, ax, cut_points=None, bins=10, label='', loc='best'):
+def plot_acc_od_ps_rc(y_true, y_pred, ax, cut_points=None, bins=10, label='', loc='best', plt_label='overdue rate'):
     df = sta_groups(y_true, y_pred, bins=bins, cut_points=cut_points)
     #### 累积逾期率、通过率和好人召回率图
     plt_x = df.y_pred_range
     # 累积逾期率
     plt_y = round(df.acc_overdue_rate, 3) * 100
     ax.plot(plt_x, plt_y,
-            linestyle='--', label='accumulate overdue rate',
+            linestyle='--', label='accumulate ' + plt_label,
             marker='o', markersize=4)
     for i, (a, b) in enumerate(zip(plt_x, plt_y)):
         ax.text(a, b + 1, f'{round(b, 3)}%', ha='center', va='bottom', fontsize=8)
@@ -207,7 +207,7 @@ def plot_acc_od_ps_rc(y_true, y_pred, ax, cut_points=None, bins=10, label='', lo
     # 累积好人召回率
     plt_y = round(df.acc_recall_rate_good, 3) * 100
     ax.plot(plt_x, plt_y,
-            linestyle=':', label='accumulate good person recall rate',
+            linestyle=':', label='accumulate expected person recall rate',
             marker='o', markersize=4)
     for i, (a, b) in enumerate(zip(plt_x, plt_y)):
         ax.text(a, b + 2, f'{round(b, 3)}%', ha='center', va='bottom', fontsize=8)
@@ -221,7 +221,7 @@ def plot_acc_od_ps_rc(y_true, y_pred, ax, cut_points=None, bins=10, label='', lo
     ax.legend(loc=loc)
 
 
-def eva_plot(data, bins=10, figsize=(14, 16), path=None, cut_points=None, save_fig=False):
+def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=None, cut_points=None, save_fig=False):
     """
 
     :param data: dict. i.e. dict. i.e. {'model1': [y_true1, y_pred1], 'model2': [y_true2, y_pred2]]}
@@ -266,9 +266,9 @@ def eva_plot(data, bins=10, figsize=(14, 16), path=None, cut_points=None, save_f
         ax2 = fig2.add_subplot(spec2[1, i])
         ks_curve(y_true, y_pred, ax2, label=label)
         ax3 = fig2.add_subplot(spec2[2, i])
-        sorting_ability(y_true, y_pred, ax3, bins=bins, cut_points=cut_points, label=label)
+        sorting_ability(y_true, y_pred, ax3, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
         ax4 = fig2.add_subplot(spec2[3, i])
-        plot_acc_od_ps_rc(y_true, y_pred, ax4, bins=bins, cut_points=cut_points, label=label)
+        plot_acc_od_ps_rc(y_true, y_pred, ax4, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
 
         i += 1
     plt.tight_layout()

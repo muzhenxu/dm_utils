@@ -67,9 +67,6 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     col_name = 'y_true'
     best_iteration = 0
 
-    df = df
-    target = target
-
     if params == 'gbtree':
         params = params_tree
     elif params == 'gblinear':
