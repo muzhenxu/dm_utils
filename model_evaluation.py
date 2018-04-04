@@ -132,7 +132,7 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     if test_size == 0:
         dvalid = xgb.DMatrix(train, train_y)
         best_iteration = best_iteration // n_folds + 1
-        early_stopping_rounds = 0
+        early_stopping_rounds = None
     else:
         dvalid = xgb.DMatrix(test, test_y)
         try:
@@ -142,7 +142,8 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
             best_iteration = 20000
 
     watchlist = [(dtrain, 'train'), (dvalid, 'eval')]
-    bst = xgb.train(params, dtrain, num_boost_round=best_iteration, evals=watchlist, early_stopping_rounds=early_stopping_rounds,
+    bst = xgb.train(params, dtrain, num_boost_round=best_iteration, evals=watchlist,
+                    early_stopping_rounds=early_stopping_rounds,
                     verbose_eval=verbose_eval)
 
     if test_size > 0:
@@ -153,4 +154,12 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     pred_train = bst.predict(dtr)
     df_train = pd.DataFrame({col_name: train_y, 'y_pred': pred_train})
 
-    return bst, dic_cv, df_test, df_train
+    df_cv = cmpt_cv(dic_cv)
+
+    return bst, df_cv, df_test, df_train
+
+
+def cmpt_cv(dic_cv):
+    df_cv = pd.DataFrame(dic_cv)
+    df_cv.describe().loc[['mean', 'std', 'min', 'max']]
+    return df_cv
