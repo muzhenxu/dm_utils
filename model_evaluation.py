@@ -64,6 +64,9 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     #     col_name = target.name
     # except:
     #     col_name = 'y_true'
+    if (test_size == 0) & (n_folds is None):
+        raise Exception("Error: test_size and n_folds can't both invalid.")
+
     col_name = 'y_true'
     best_iteration = 0
 
@@ -91,6 +94,7 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     dtest = xgb.DMatrix(test)
 
     if n_folds:
+        df_val = pd.DataFrame()
         skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_state)
         for t_index, v_index in skf.split(train, train_y):
             tra, val = train.iloc[t_index, :], train.iloc[v_index, :]
@@ -110,11 +114,15 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
             if test_size > 0:
                 temp = bst.predict(dtest)
                 dic_res = {'train_auc': roc_auc_score(tra_y, bst.predict(xgb.DMatrix(tra))),
-                           'val_auc': roc_auc_score(val_y, bst.predict(xgb.DMatrix(val))),
+                           'val_auc': roc_auc_score(val_y, bst.predict(dval)),
                            'test auc': roc_auc_score(test_y, temp)}
             else:
                 dic_res = {'train_auc': roc_auc_score(tra_y, bst.predict(xgb.DMatrix(tra))),
-                           'val_auc': roc_auc_score(val_y, bst.predict(xgb.DMatrix(val)))}
+                           'val_auc': roc_auc_score(val_y, bst.predict(dval))}
+
+            val_df = pd.DataFrame({'y_true': val_y, 'y_pred': bst.predict(dval)})
+            df_val = pd.concat([df_val, val_df], axis=0)
+
             print(dic_res)
             dic_cv.append(dic_res)
 
@@ -129,7 +137,7 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
         dvalid = xgb.DMatrix(test, test_y)
         try:
             best_iteration = best_iteration // n_folds + 1
-            early_stopping_rounds = 0
+            early_stopping_rounds = None
         except:
             best_iteration = 20000
 
@@ -141,7 +149,7 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
         pred_test = bst.predict(dtest)
         df_test = pd.DataFrame({col_name: test_y, 'y_pred': pred_test})
     else:
-        df_test = None
+        df_test = df_val
     pred_train = bst.predict(dtr)
     df_train = pd.DataFrame({col_name: train_y, 'y_pred': pred_train})
 
