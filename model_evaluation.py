@@ -126,6 +126,8 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
             print(dic_res)
             dic_cv.append(dic_res)
 
+        df_cv = cmpt_cv(dic_cv)
+
     dtr = xgb.DMatrix(train)
     dtrain = xgb.DMatrix(train, train_y)
 
@@ -154,7 +156,6 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     pred_train = bst.predict(dtr)
     df_train = pd.DataFrame({col_name: train_y, 'y_pred': pred_train})
 
-    df_cv = cmpt_cv(dic_cv)
 
     return bst, df_cv, df_test, df_train
 
