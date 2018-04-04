@@ -127,6 +127,8 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
             dic_cv.append(dic_res)
 
         df_cv = cmpt_cv(dic_cv)
+    else:
+        df_cv = None
 
     dtr = xgb.DMatrix(train)
     dtrain = xgb.DMatrix(train, train_y)
