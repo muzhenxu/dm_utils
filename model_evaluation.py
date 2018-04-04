@@ -161,5 +161,5 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
 
 def cmpt_cv(dic_cv):
     df_cv = pd.DataFrame(dic_cv)
-    df_cv.describe().loc[['mean', 'std', 'min', 'max']]
+    df_cv = df_cv.describe().loc[['mean', 'std', 'min', 'max']]
     return df_cv
