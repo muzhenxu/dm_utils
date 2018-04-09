@@ -99,9 +99,10 @@ class OperateHdfs(object):
             df = pd.read_csv(file, sep=sep, encoding=encoding)
         elif file.split('.')[-1] == 'pkl':
             df = pd.read_pickle(file)
-            df.replace({'\n': ' ', '\x01': ' '}, regex=True, inplace=True)
         else:
             return "can't read this file !"
+
+        df.replace({'\n': ' ', hive_delim: ' '}, regex=True, inplace=True)
 
         if drop_table:
             cmd = ['hive', '-e', 'DROP TABLE IF EXISTS %s' % table_name]
