@@ -6,6 +6,7 @@ import os
 import math
 from sklearn.metrics import classification_report
 
+
 def chi2_calc(df_rule, labels, columns=None, save=True, path='reportsource/'):
     if columns is None:
         columns = [c for c in df_rule.columns if c not in labels]
@@ -36,7 +37,21 @@ def chi2_calc(df_rule, labels, columns=None, save=True, path='reportsource/'):
 
     return dic_df
 
+
 class Ripperk(object):
+    """
+    整体学习流程如下：
+    1. 分割growset和prunset
+    2. 对于growset， 运用irep学习规则集。
+       a. 运用foil在growset上学习单规则（一系列条件交集）,
+       b. 在prunset上进行剪枝
+       c. 该规则加入到ruleset中，剔除该规则覆盖样本，余下样本继续学习，直到ruleset不满足mdl条件
+    3. 在完整dataset上对ruleset进行优化
+       最终学习到的ruleset是个无序规则集。试想下，先学到A rule，再学到B。那么即使互换A，B位置，B覆盖的样本要么是A中的一部分，要么就是余下样本中满足B条件的，换言之，打乱顺序最后覆盖到的样本是一样的。
+    TODO: 如果依次学到A，B，C，只取两条，是不是选择A，B会更好呢？感觉并不是。甚至于不是其中任意两条的组合之一。一般会有这种需求，应该是因为学到规则覆盖样本的正例率不达到要求。那么应该通过设定条件的方式重新学习。
+          比如在foil过程中，强制要求正例率达到一定阈值，不然直接给出负gain。good！确实应该加入该条件来进行控制。同理，对规则覆盖的样本量也可以最小限制。有时并不苛求样本量，那么foil gain计算规则的方法是否合适呢？
+    """
+
     def __init__(self, prun_ratio=0.2, dl_threshold=64, k=2, sample_threshold=100, diff_threshold=0.0, q=10):
         self.prun_ratio = prun_ratio
         self.dl_threshold = dl_threshold
@@ -50,14 +65,14 @@ class Ripperk(object):
 
         self._get_conditions(df)
 
-        items =  list(label.value_counts().sort_values(ascending=False).index)
+        items = list(label.value_counts().sort_values(ascending=False).index)
         self.items = list(items)
 
         while len(items) > 1:
             # get cls from end to start, from small to big
             item = items.pop()
-            pos = df[label==item]
-            neg = df[label!=item]
+            pos = df[label == item]
+            neg = df[label != item]
 
             ruleset = self.irep(pos, neg)
 
@@ -279,7 +294,7 @@ class Ripperk(object):
                 if not rule in new_ruleset:
                     new_ruleset.insert(i, rule)
 
-            i+= 1
+            i += 1
 
         return new_ruleset
 
@@ -307,10 +322,10 @@ class Ripperk(object):
             if df[c].nunique() == 2:
                 binary_cols.append(c)
 
-        discrete_cols = list(s.index[s=='object'])
+        discrete_cols = list(s.index[s == 'object'])
         discrete_cols = [c for c in discrete_cols if c not in binary_cols]
 
-        category_cols = list(s.index[s=='category'])
+        category_cols = list(s.index[s == 'category'])
         continuous_cols = [i for i in df.columns if i not in discrete_cols + category_cols + binary_cols]
 
         conditions = []
@@ -335,17 +350,16 @@ class Ripperk(object):
                 conditions.append((c, ('>=', v)))
                 conditions.append((c, ('<=', v)))
 
-
         self.conditions = conditions
         self.init_dl = len(conditions)
 
     def bindings(self, df, ruleset):
         l_t = df[df.columns[0]].astype(bool)
-        l_t[l_t==True] = False
+        l_t[l_t == True] = False
 
         for rule in ruleset:
             l = df[df.columns[0]].astype(bool)
-            l[l==False] = True
+            l[l == False] = True
             for attr, condition in rule.items():
                 if condition[0] == '==':
                     l &= df[attr] == condition[1]
@@ -362,6 +376,7 @@ class Ripperk(object):
         l_t = self.bindings(df, ruleset)
         df = df[~l_t]
         return df
+
 
 if __name__ == '__main__':
     df = pd.read_pickle('../data/process_data.pkl')

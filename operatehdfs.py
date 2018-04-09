@@ -82,12 +82,24 @@ class OperateHdfs(object):
 
         return df
 
-    def savetohdfs(self, table, file, drop_table=False, sep=',', encoding=None):
+    def savetohdfs(self, table, file, drop_table=False, sep=',', hive_delim='\x01', encoding=None):
+        """
+        往非自己库中写入数据时，会出现追加写入的情况（记录数会不断变大，是否为追加没有考证），即使先删除表重建，再写入也有这种情况。
+        可能是权限原因导致删除表操作没有真的删干净hdfs。。而且在我做了建表操作之后，库所有者可能也会丢失这张表的权限，
+        导致即使权限所有者删表再写入也会不停追加。该问题无法复现。。。。。
+        :param table:
+        :param file:
+        :param drop_table:
+        :param sep:
+        :param encoding:
+        :return:
+        """
         table_name = '%s.%s' % (self.user, table)
         if file.split('.')[-1] == 'csv':
             df = pd.read_csv(file, sep=sep, encoding=encoding)
         elif file.split('.')[-1] == 'pkl':
             df = pd.read_pickle(file)
+            df.replace({'\n': ' ', '\x01': ' '}, regex=True, inplace=True)
         else:
             return "can't read this file !"
 
@@ -111,8 +123,8 @@ class OperateHdfs(object):
         df_type.data_type = df_type.data_type.map(lambda s: chtype(str(s)))
         df_type['features'] = df_type.apply(lambda s: '`' + s[0] + '`' + ' ' + s[1], axis=1)
         columns = ','.join(df_type['features'])
-        sql = "create table %s (%s) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' STORED AS TEXTFILE;" % (
-            table_name, columns)
+        sql = "create table %s (%s) ROW FORMAT DELIMITED FIELDS TERMINATED BY '%s' STORED AS TEXTFILE;" % (
+            table_name, columns, hive_delim)
         cmd = ['hive', '-e', '"%s"' % sql]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         for line in iter(process.stdout.readline, b''):
@@ -123,14 +135,15 @@ class OperateHdfs(object):
             temp_file = 'temp_save_to_hdfs_%s.csv' % i
             if not os.path.exists(temp_file):
                 break
-        df.to_csv(temp_file, index=False, header=False, sep='\t')
+        df.to_csv(temp_file, index=False, header=False, sep=hive_delim)
 
-        cmd = ['hive', '-e', '"load data local inpath \'%s\' into table %s;"' % (temp_file, table_name)]
+        cmd = ['hive', '-e', '"load data local inpath \'%s\' overwrite into table %s;"' % (temp_file, table_name)]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         for line in iter(process.stdout.readline, b''):
             print(line)
         process.wait()
         os.remove(temp_file)
+
 
 if __name__ == '__main__':
     hdata = OperateHdfs(user='dm_xu_h')
