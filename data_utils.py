@@ -6,15 +6,23 @@ import pandas as pd
 import json
 import numpy as np
 
+
 def md5(s):
     m = hashlib.md5()
     m.update(str(s).encode())
     return m.hexdigest()
 
+
 def passwd():
     salt = ''.join(random.sample(string.ascii_letters + string.digits, 8))
     print(salt)
     return salt
+
+
+def files_to_zip(name='sample.zip', path='datasource/sample'):
+    pwd = passwd()
+    os.system('zip -r -P%s %s %s' % (pwd, name, path))
+
 
 def merge_report(reportpath='reportsource/'):
     writer = pd.ExcelWriter(reportpath + 'report.xlsx')
@@ -25,7 +33,7 @@ def merge_report(reportpath='reportsource/'):
     writer.save()
 
 
-def get_model_data(s, method='response',  key='score'):
+def get_model_data(s, method='response', key='score'):
     if method == 'response':
         try:
             return json.loads(s)['data'][key]
