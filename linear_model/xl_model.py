@@ -36,7 +36,7 @@ class xl_model(object):
 
         self.fe = FFMEncoder(df)
         self.fe.fit(df, self.cutoff)
-        self.transform(df, label, path)
+        self.fe.transform(df, label, path)
         if eva_df is not None:
             self.transform(eva_df, eva_label, eva_path)
 
@@ -54,3 +54,6 @@ class xl_model(object):
         self.clf.predict(self.model_path, out_path)
         pred = pd.read_csv(out_path)
         return pred
+
+if __name__ == '__main__':
+    pass

@@ -206,7 +206,7 @@ class FFMEncoder(object):
         if save_file:
             if os.path.dirname(path) != '':
                 if not os.path.exists(os.path.dirname(path)):
-                    os.makedirs(os.path.exists(os.path.dirname(path)))
+                    os.makedirs(os.path.dirname(path))
             libffm_df.to_csv(path, sep=' ', header=False, index=False)
         return libffm_df
 
