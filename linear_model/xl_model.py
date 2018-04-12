@@ -53,7 +53,7 @@ class xl_model(object):
         self.model_path = model_path
 
     def predict(self, df, path='datasource/test.ffm', out_path='datasource/pred.txt'):
-        self.fe.transform(df, path)
+        self.fe.transform(df, path=path)
         self.clf.setTest(path)
         self.clf.setSigmoid()
         self.clf.predict(self.model_path, out_path)
