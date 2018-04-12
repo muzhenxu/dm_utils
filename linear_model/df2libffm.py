@@ -10,6 +10,7 @@ import pandas as pd
 from collections import defaultdict
 import numpy as np
 
+
 def hashstr(str, nr_bins=1e+6):
     return int(hashlib.md5(str.encode('utf8')).hexdigest(), 16) % (int(nr_bins) - 1) + 1
 
@@ -172,7 +173,7 @@ class CategoryDictGenerator:
 
 
 # TODO: 并行化支持
-class FfmEncoder(object):
+class FFMEncoder(object):
     def __init__(self, nthread=1):
         self.nthread = nthread
 
@@ -206,7 +207,18 @@ class FfmEncoder(object):
             if os.path.dirname(path) != '':
                 if not os.path.exists(os.path.dirname(path)):
                     os.makedirs(os.path.exists(os.path.dirname(path)))
-            df.to_csv(path, sep=' ', header=False, index=False)
+            libffm_df.to_csv(path, sep=' ', header=False, index=False)
         return libffm_df
 
 
+if __name__ == '__main__':
+    cat1 = ['AAA', 'BBB', 'CCC']
+    cat2 = ['DDD', 'EEE', 'FFF']
+    label = [0, 1, 0]
+    num1 = [1, 2, 3]
+    num2 = [4, 5, 6]
+    df = pd.DataFrame({'Label': label, 'cat1': cat1, 'cat2': cat2, 'num1': num1, 'num2': num2})
+
+    fe = FFMEncoder()
+    fe.fit(df.iloc[:, 1:])
+    df2 = fe.transform(df.iloc[:, 1:], df['Label'])
