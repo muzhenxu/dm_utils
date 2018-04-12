@@ -47,7 +47,7 @@ class xl_model(object):
 
         self.clf.setTrain(path)
         if eva_df is not None:
-            self.clf.setlidate(eva_path)
+            self.clf.setValidate(eva_path)
 
         self.clf.fit(self.params, model_path)
         self.model_path = model_path
