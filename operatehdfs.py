@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import subprocess
 import re
-
+from pandas.api.types import is_numeric_dtype
 
 class OperateHdfs(object):
     def __init__(self, user='dm_xu_h', ip_port='http://hadoop-hd1:50070', root='/user/hive/warehouse'):
@@ -102,7 +102,10 @@ class OperateHdfs(object):
         else:
             return "can't read this file !"
 
-        df.replace({'\n': ' ', hive_delim: ' '}, regex=True, inplace=True)
+        tmp = df.dtypes.map(is_numeric_dtype)
+        category_features = tmp[~tmp].index.values
+        if len(category_features) > 0:
+            df[category_features] = df[category_features].replace({'\n': ' ', hive_delim: ' '}, regex=True)
 
         if drop_table:
             cmd = ['hive', '-e', 'DROP TABLE IF EXISTS %s' % table_name]

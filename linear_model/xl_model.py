@@ -57,7 +57,7 @@ class xl_model(object):
         self.clf.setTest(path)
         self.clf.setSigmoid()
         self.clf.predict(self.model_path, out_path)
-        pred = pd.read_csv(out_path)
+        pred = pd.read_csv(out_path, header=None)
         return pred
 
 
