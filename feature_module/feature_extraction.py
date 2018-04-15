@@ -52,7 +52,7 @@ def delay_stats_feature_extraction(t, smooth=0):
 
 
 class TimeSpanFeatureExtraction(object):
-    def __init__(self, smooth=None, sort=True, margins=True, time_unit='days', col_name_starts=''):
+    def __init__(self, smooth=None, sort=True, margins=True, time_unit='days', col_name_starts='', extract_func=span_feature_extraction, stats=None):
         """
 
         :param col:
@@ -69,6 +69,12 @@ class TimeSpanFeatureExtraction(object):
         self.margins = margins
         self.time_unit = time_unit
         self.col_name_starts = col_name_starts
+        self.extract_func = extract_func
+
+        if stats is None:
+            self.stats = ['latest', 'min', 'max', 'mean', 'median', 'std', 'sum', 'len']
+        else:
+            self.stats = stats
 
     def fit(self, df, col, by, hue=None):
         self.col = col
@@ -114,9 +120,9 @@ class TimeSpanFeatureExtraction(object):
                 df['diff_cols'] = df['diff_cols'].map(lambda s: s.days)
 
         if self.margins:
+            # TODO: 利用stats作为span_feature_extraction的入参
             df_feature = df.groupby(self.by)['diff_cols'].agg(span_feature_extraction).apply(pd.Series)
-            df_feature.columns = [self.col_name_starts + '_' + i for i in
-                                  ['latest', 'min', 'max', 'mean', 'median', 'std', 'sum', 'len']]
+            df_feature.columns = [self.col_name_starts + '_' + i for i in self.stats]
             df_feature.fillna(df_feature.mean(), inplace=True)
         else:
             df_feature = pd.DataFrame()
