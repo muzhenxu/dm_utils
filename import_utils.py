@@ -14,18 +14,13 @@ import pyecharts
 from collections import defaultdict
 from sklearn.externals import joblib
 
-from . import feature_evaluation
-from .operatehdfs import OperateHdfs
-from . import feature_evaluation
-from . import feature_explore
-from . import feature_encoding
-from .model_evaluation import xgb_model_evaluation, params
+from .feature_engineer import feature_evaluation, feature_extraction, feature_encoding, feature_explore
+from .database_module.operatehdfs import OperateHdfs
+from .model_module.model_evaluation import xgb_model_evaluation, params
 from . import data_utils
-from . import visualize
-from .rule_learning import Ripperk
+from .visualize_module import visualize, facets
+from .rule_module.rule_learning import Ripperk, chi2_calc
 from sklearn.metrics import classification_report
-from . import rule_learning
-from . import facets
 from sklearn import metrics  as mr
 from sklearn.model_selection import train_test_split
 from .model_monitor.monitor import model_monitor

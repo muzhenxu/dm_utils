@@ -62,4 +62,13 @@ class xl_model(object):
 
 
 if __name__ == '__main__':
-    pass
+    cat1 = ['AAA', 'BBB', 'CCC']
+    cat2 = ['DDD', 'EEE', 'FFF']
+    label = [0, 1, 0]
+    num1 = [1, 2, 3]
+    num2 = [4, 5, 6]
+    df = pd.DataFrame({'Label': label, 'cat1': cat1, 'cat2': cat2, 'num1': num1, 'num2': num2})
+
+    fe = FFMEncoder()
+    fe.fit(df.iloc[:, 1:])
+    df2 = fe.transform(df.iloc[:, 1:], df['Label'])

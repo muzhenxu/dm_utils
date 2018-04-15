@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from .facets_utils.generic_feature_statistics_generator import GenericFeatureStatisticsGenerator
+from facets_utils.generic_feature_statistics_generator import GenericFeatureStatisticsGenerator
 import base64
 from IPython.core.display import display, HTML
 
