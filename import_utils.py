@@ -14,7 +14,7 @@ import pyecharts
 from collections import defaultdict
 from sklearn.externals import joblib
 
-from .feature_engineer import feature_evaluation, feature_extraction, feature_encoding, feature_explore
+from .feature_module import feature_evaluation, feature_extraction, feature_encoding, feature_explore
 from .database_module.operatehdfs import OperateHdfs
 from .model_module.model_evaluation import xgb_model_evaluation, params
 from . import data_utils
@@ -23,7 +23,7 @@ from .rule_module.rule_learning import Ripperk, chi2_calc
 from sklearn.metrics import classification_report
 from sklearn import metrics  as mr
 from sklearn.model_selection import train_test_split
-from .model_monitor.monitor import model_monitor
+from .monitor_module.monitor import model_monitor
 import xgboost as xgb
 
 from IPython.core.interactiveshell import InteractiveShell

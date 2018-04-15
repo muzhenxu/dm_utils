@@ -8,7 +8,7 @@ from sklearn import metrics as mr
 from sklearn.model_selection import StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 
-from feature_engineer import feature_encoding
+from . import feature_encoding
 
 
 def count_binary(a, event=1):

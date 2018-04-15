@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn import metrics as mr
 from sklearn.tree import export_graphviz
 
-from feature_engineer import feature_evaluation
+from ..feature_module import feature_evaluation
 
 
 def visualize_tree(dt, path=None, feature_names=None):
