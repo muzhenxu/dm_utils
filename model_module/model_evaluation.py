@@ -60,6 +60,23 @@ params_linear = {
 def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_folds=5, test_size=0.2, random_state=7,
                          early_stopping_rounds=100, num_rounds=50000, cv_verbose_eval=False, verbose_eval=True,
                          oversample=False):
+    """
+
+    :param df:
+    :param target:
+    :param test:
+    :param test_y:
+    :param params:
+    :param n_folds:
+    :param test_size:
+    :param random_state:
+    :param early_stopping_rounds:
+    :param num_rounds:
+    :param cv_verbose_eval:
+    :param verbose_eval:
+    :param oversample:
+    :return: bst, df_cv, df_test, df_train
+    """
     # try:
     #     col_name = target.name
     # except:
@@ -143,7 +160,7 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
             best_iteration = best_iteration // n_folds + 1
             early_stopping_rounds = None
         except:
-            best_iteration = 20000
+            best_iteration = num_rounds
 
     watchlist = [(dtrain, 'train'), (dvalid, 'eval')]
     bst = xgb.train(params, dtrain, num_boost_round=best_iteration, evals=watchlist,

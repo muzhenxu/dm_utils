@@ -13,6 +13,7 @@ import json
 import pyecharts
 from collections import defaultdict
 from sklearn.externals import joblib
+from pandas.api.types import is_numeric_dtype
 
 from .feature_module import feature_evaluation, feature_extraction, feature_encoding, feature_explore
 from .database_module.operatehdfs import OperateHdfs
