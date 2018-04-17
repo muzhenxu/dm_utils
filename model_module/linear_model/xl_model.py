@@ -25,10 +25,13 @@ class xl_model(object):
                        'lambda': self.reg_lambda, 'opt': self.opt, 'metric': self.metric, 'beta': self.beta,
                        'alpha': self.alpha, 'lambda_1': self.lambda_1, 'lambda_2': self.lambda_2}
 
-    def fit(self, df, label, eva_df=None, eva_label=None, path='datasource/train.ffm', eva_path='datasource/valid.ffm',
-            model_path='datasource/ffm_model.out'):
+    def fit(self, df, label, eva_df=None, eva_label=None, path='datasource/train.ffm', overwrite_path=True, eva_path='datasource/valid.ffm',
+            model_path='datasource/ffm_model.out', overwrite_eva_path=True):
         if (eva_df is None) ^ (eva_label is None):
             raise Exception('params eva_df, eva_df must be all None or all have value.')
+
+        df.index = range(df.shape[0])
+        label.index = range(label.shape[0])
 
         if self.model_type == 'lr':
             self.clf = xl.create_ffm()
@@ -43,6 +46,8 @@ class xl_model(object):
         self.fe.fit(df, self.cutoff)
         self.fe.transform(df, label, path)
         if eva_df is not None:
+            eva_df.index = range(eva_df.shape[0])
+            eva_label.index = range(eva_label.shape[0])
             self.fe.transform(eva_df, eva_label, eva_path)
 
         self.clf.setTrain(path)
@@ -52,7 +57,8 @@ class xl_model(object):
         self.clf.fit(self.params, model_path)
         self.model_path = model_path
 
-    def predict(self, df, path='datasource/test.ffm', out_path='datasource/pred.txt'):
+    def predict(self, df, path='datasource/test.ffm', out_path='datasource/pred.txt', overwrite_path=True):
+        df.index = range(df.shape[0])
         self.fe.transform(df, path=path)
         self.clf.setTest(path)
         self.clf.setSigmoid()
