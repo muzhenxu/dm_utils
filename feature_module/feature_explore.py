@@ -15,8 +15,10 @@ def desc_df(df_origin):
     nunique_value = df.apply(lambda c: c.nunique())
     df_desc['diff_values_num'] = nunique_value
 
-    # TODO: if a feature is null for every element, below code will raise error.
-    same_value = df.apply(lambda c: c.value_counts().iloc[0])
+    try:
+        same_value = df.apply(lambda c: c.value_counts().iloc[0])
+    except:
+        same_value = 0
     df_desc['most_value_num'] = same_value
     df_desc['same_ratio'] = same_value / df.shape[0]
 
