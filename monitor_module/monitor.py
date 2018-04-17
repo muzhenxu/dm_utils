@@ -8,6 +8,16 @@ import os
 
 from .psi import Psi
 
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
 
 def get_score_data(s, key='score'):
     try:
@@ -111,13 +121,13 @@ def get_feature_stats(df, hue='model_id', feature_cols='model_record_request_dat
 
 
 def plot_monitor(dic_psi, dic_ks, dic_stats, cols=None, path='reportsource/model_monitor.html'):
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
+    if not os.path.exists(os.path.dirname(os.path.abspath(path))):
+        os.makedirs(os.path.dirname(os.path.abspath(path)))
 
     page = pyecharts.Page()
 
     for k in dic_psi.keys():
-        temp = pd.read_json(json.dumps(dic_psi[k])).sort_values('date')
+        temp = pd.read_json(json.dumps(dic_psi[k], cls=MyEncoder)).sort_values('date')
         temp = temp[temp.volume > 100]
         line = pyecharts.Line(k + ' PSI监控')
         line.add('psi', temp.date, temp['psi'], xaxis_rotate=45, is_datazoom_show=True, tooltip_tragger='axis',
@@ -141,7 +151,7 @@ def plot_monitor(dic_psi, dic_ks, dic_stats, cols=None, path='reportsource/model
     for k in dic_ks.keys():
         line = pyecharts.Line('%s features ks monitor' % k)
         for f in dic_ks[k].keys():
-            temp = pd.read_json(json.dumps(dic_ks[k][f]))
+            temp = pd.read_json(json.dumps(dic_ks[k][f], cls=MyEncoder))
             temp = temp[temp['volume'] > 100]
             line.add(f, temp.date, temp.ks, xaxis_rotate=90, is_datazoom_show=True, tooltip_tragger='axis',
                      datazoom_type='both', legend_pos='right', legend_orient='vertical')
@@ -184,5 +194,5 @@ def model_monitor(df, hue='model_id', score_cols='model_record_response_data', b
     return None
 
 if __name__ == '__main__':
-    df = pd.read_pickle('test_data/model_monitor_test_data.pkl')
+    df = pd.read_pickle('../test_data/model_monitor_test_data.pkl')
     model_monitor(df, path='../test_output/model_monitor.html')
