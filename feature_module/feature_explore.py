@@ -50,11 +50,13 @@ def cover_stats(df, path=None, feature_map_dict=None):
     return t
 
 
-def target_stats(df_origin, target_cols, path=None):
+def target_stats(df_origin, target_cols, pp=None, path=None):
     df = df_origin.copy()
-    df['是否匹配上'] = (df.notnull().sum(axis=1) > len(target_cols)).astype(int).replace([1, 0], ['是', '否'])
-
-    t = pd.pivot_table(df, index='是否匹配上', values=target_cols, margins=True)
+    if pp is None:
+        t = pd.DataFrame(df[target_cols].mean()).T
+        t.index = ['逾期率']
+    else:
+        t = pd.pivot_table(df, index=pp, values=target_cols, margins=True)
 
     if not path:
         if not os.path.exists('reportsource'):
