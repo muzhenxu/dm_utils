@@ -17,7 +17,7 @@ from pandas.api.types import is_numeric_dtype
 
 from .feature_module import feature_evaluation, feature_extraction, feature_encoding, feature_explore
 from .database_module.operatehdfs import OperateHdfs
-from .model_module.model_evaluation import xgb_model_evaluation, params
+from .model_module.model_evaluation import xgb_model_evaluation, params, model_cost_cmpt, model_cost_plot
 from . import data_utils
 from .visualize_module import visualize, facets
 from .rule_module.rule_learning import Ripperk, chi2_calc

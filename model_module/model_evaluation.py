@@ -4,6 +4,11 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold, StratifiedKFold
+import os
+from sklearn import metrics as mr
+from scipy.stats import ks_2samp
+import matplotlib.pyplot as plt
+from ..visualize_module import visualize
 
 params = {
     'booster': 'gbtree',
@@ -58,7 +63,7 @@ params_linear = {
 
 
 def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_folds=5, test_size=0.2, random_state=7,
-                         early_stopping_rounds=100, num_rounds=50000, cv_verbose_eval=False, verbose_eval=True,
+                         early_stopping_rounds=30, num_rounds=50000, cv_verbose_eval=False, verbose_eval=True,
                          oversample=False):
     """
 
@@ -86,6 +91,9 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
 
     col_name = 'y_true'
     best_iteration = 0
+
+    if df.shape[1] == 1:
+        params['colsample_bytree'] = 1
 
     if params == 'gbtree':
         params = params_tree
@@ -166,6 +174,8 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     bst = xgb.train(params, dtrain, num_boost_round=best_iteration, evals=watchlist,
                     early_stopping_rounds=early_stopping_rounds,
                     verbose_eval=verbose_eval)
+    print('best_iteration', best_iteration)
+    print('early_stopping_rounds', early_stopping_rounds)
 
     if test_size > 0:
         pred_test = bst.predict(dtest)
@@ -175,7 +185,6 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     pred_train = bst.predict(dtr)
     df_train = pd.DataFrame({col_name: train_y, 'y_pred': pred_train})
 
-
     return bst, df_cv, df_test, df_train
 
 
@@ -183,3 +192,39 @@ def cmpt_cv(dic_cv):
     df_cv = pd.DataFrame(dic_cv)
     df_cv = df_cv.describe().loc[['mean', 'std', 'min', 'max']]
     return df_cv
+
+
+def model_cost_plot(model_result, spec_p=None, bins=50, path='reportsource/model_cost.png'):
+    f, axes = plt.subplots(1, 2, figsize=(16, 6))
+    visualize.roc_curve(model_result, axes[0])
+    visualize.pass_overdue_curve(model_result, axes[1], spec_p=spec_p, bins=bins)
+
+    if not os.path.exists(os.path.dirname(os.path.abspath(path))):
+        os.mkdir(os.path.dirname(os.path.abspath(path)))
+    plt.savefig(path)
+
+
+# TODO: xgb_model_evaluation需要泛化
+def model_cost_cmpt(dic_model, label, train, test=None, n_folds=None, spec_p=0.8, bins=20,
+                    path='reportsource/model_cost.png', **kwargs):
+    model_result = {}
+    for k, v in dic_model.items():
+        print(k)
+        cols = v
+        if test is None:
+            bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], n_folds=n_folds, **kwargs)
+        else:
+            bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], test[cols], test[label],
+                                                                  n_folds=n_folds, **kwargs)
+        model_result[k] = [df_test.y_true, df_test.y_pred]
+
+    res = []
+    for k, v in model_result.items():
+        y_true, y_pred = v[0], v[1]
+        res.append({'moedel_name': k, 'auc': mr.roc_auc_score(y_true, y_pred),
+                    'ks': ks_2samp(y_pred[y_true == 1], y_pred[y_true == 0])[0]})
+    res = pd.DataFrame(res)[['moedel_name', 'auc', 'ks']]
+
+    model_cost_plot(model_result, spec_p, bins, path)
+
+    return model_result, res
