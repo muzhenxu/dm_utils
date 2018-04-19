@@ -213,13 +213,13 @@ def model_cost_cmpt(dic_model, label, train, test=None, n_folds=None, spec_p=0.8
         cols = v
         if test is None:
             if len(cols) == 1:
-                df_test = pd.DataFrame(train['label'], train[cols[0]])
+                df_test = pd.DataFrame(train[label], train[cols[0]])
                 df_test.columns = ['y_true', 'y_pred']
             else:
                 bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], n_folds=n_folds, **kwargs)
         else:
             if len(cols) == 1:
-                df_test = pd.DataFrame(test['label'], test[cols[0]])
+                df_test = pd.DataFrame(test[label], test[cols[0]])
                 df_test.columns = ['y_true', 'y_pred']
             else:
                 bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], test[cols], test[label],
