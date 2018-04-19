@@ -211,19 +211,26 @@ def model_cost_cmpt(dic_model, label, train, test=None, n_folds=None, spec_p=0.8
     for k, v in dic_model.items():
         print(k)
         cols = v
+        # if test is None:
+        #     if len(cols) == 1:
+        #         df_test = pd.DataFrame(pd.concat([train[label], train[cols[0]]], axis=1))
+        #         df_test.columns = ['y_true', 'y_pred']
+        #     else:
+        #         bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], n_folds=n_folds, **kwargs)
+        # else:
+        #     if len(cols) == 1:
+        #         df_test = pd.DataFrame(pd.concat([test[label], test[cols[0]]], axis=1))
+        #         df_test.columns = ['y_true', 'y_pred']
+        #     else:
+        #         bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], test[cols], test[label],
+        #                                                           n_folds=n_folds, **kwargs)
+
         if test is None:
-            if len(cols) == 1:
-                df_test = pd.DataFrame(pd.concat([train[label], train[cols[0]]], axis=1))
-                df_test.columns = ['y_true', 'y_pred']
-            else:
-                bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], n_folds=n_folds, **kwargs)
+            bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], n_folds=n_folds, **kwargs)
         else:
-            if len(cols) == 1:
-                df_test = pd.DataFrame(pd.concat([test[label], test[cols[0]]], axis=1))
-                df_test.columns = ['y_true', 'y_pred']
-            else:
-                bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], test[cols], test[label],
-                                                                  n_folds=n_folds, **kwargs)
+            bst, dic_cv, df_test, df_train = xgb_model_evaluation(train[cols], train[label], test[cols], test[label],
+                                                                      n_folds=n_folds, **kwargs)
+
         model_result[k] = [df_test.y_true, df_test.y_pred]
 
     res = []
