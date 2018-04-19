@@ -43,7 +43,7 @@ class Psi(object):
         cut_points = list(cut_points)
 
         cut_points.insert(0, 0)
-        cut_points[-1] = 1
+        cut_points[-1] = np.inf
         return cut_points
 
 

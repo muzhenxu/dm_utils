@@ -24,7 +24,7 @@ from .rule_module.rule_learning import Ripperk, chi2_calc
 from sklearn.metrics import classification_report
 from sklearn import metrics  as mr
 from sklearn.model_selection import train_test_split
-from .monitor_module.monitor import model_monitor
+from .monitor_module.monitor import model_monitor, Psi
 import xgboost as xgb
 
 from IPython.core.interactiveshell import InteractiveShell
