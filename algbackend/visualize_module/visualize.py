@@ -281,7 +281,7 @@ def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=Non
             os.mkdir('reportsource')
         if path is None:
             path = 'eva_plot.png'
-        plt.savefig(os.path.join('report', path))
+        plt.savefig(os.path.join(reportsource, path))
     plt.show()
 
 # def eva_plot(data, bins=10, figsize=(14, 10), path=None, cut_points=None, save_fig=False):
