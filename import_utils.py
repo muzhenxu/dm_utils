@@ -26,7 +26,7 @@ from sklearn import metrics  as mr
 from sklearn.model_selection import train_test_split
 from .algbackend.monitor_module.monitor import model_monitor, Psi
 import xgboost as xgb
-from .service.trainservice import TrainService
+# from .service.trainservice import TrainService
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
