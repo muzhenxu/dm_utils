@@ -38,7 +38,7 @@ mtlpath = path + '/mtlsource/'
 reportpath = 'reportsource/'
 
 if not os.path.exists(mtlpath):
-    os.mkdir(mtlpath)
+    os.makedirs(mtlpath)
 if not os.path.exists(datapath):
     os.mkdir(datapath)
 if not os.path.exists(reportpath):
