@@ -277,11 +277,11 @@ def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=Non
 
 
     if save_fig:
-        if not os.path.exists('reportsource'):
-            os.mkdir('reportsource')
         if path is None:
-            path = 'eva_plot.png'
-        plt.savefig(os.path.join(reportsource, path))
+            if not os.path.exists('reportsource'):
+                os.mkdir('reportsource')
+            path = 'reportsource/eva_plot.png'
+        plt.savefig(path)
     plt.show()
 
 # def eva_plot(data, bins=10, figsize=(14, 10), path=None, cut_points=None, save_fig=False):
