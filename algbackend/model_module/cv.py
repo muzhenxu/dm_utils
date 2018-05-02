@@ -6,7 +6,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 
 
-def xgb_model_evaluation(clf, df, target, test=None, test_y=None, n_folds=5, test_size=0.2, random_state=7):
+def model_cv(clf, df, target, test=None, test_y=None, n_folds=5, test_size=0.2, random_state=7):
     if (test_size == 0) & (n_folds is None):
         raise Exception("Error: test_size and n_folds can't both invalid.")
 

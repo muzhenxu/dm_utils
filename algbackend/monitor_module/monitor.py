@@ -55,8 +55,8 @@ def get_psi(df, hue='model_id', score_cols='model_record_response_data', benchma
         df_feature['score'] = df_feature[score_cols].map(lambda s: score_func(s, key=score_keys))
         df_feature = df_feature.dropna(subset=['score'], axis=0)
 
+        psi.get_cutpoints(df_feature.score[df_feature[benchmark_cols] == 1])
         for t in df_feature[df_feature[benchmark_cols] == 0][time_cols].unique():
-            psi.get_cutpoints(df_feature.score[df_feature[benchmark_cols] == 1])
             psi_value = round(
                 float(psi.get_psi(
                     df_feature.score[(df_feature[benchmark_cols] == 0) & (df_feature[time_cols] == t)])),
@@ -186,10 +186,13 @@ def model_monitor(df, hue='model_id', score_cols='model_record_response_data', b
                   pass_cols='is_grant', time_cols='model_record_created_at',
                   score_func=get_score_data, score_keys='score', feature_cols='model_record_request_data',
                   stats_func=k_stats, parse_func=parse_feature, cols=None, path='reportsource/model_monitor.html'):
+    print('-----start psi-----')
     dic_psi = get_psi(df, hue=hue, score_cols=score_cols, benchmark_cols=benchmark_cols, pass_cols=pass_cols,
                       time_cols=time_cols, score_func=score_func, score_keys=score_keys)
+    print('-----start feature stats------')
     dic_ks, dic_stats = get_feature_stats(df, hue=hue, feature_cols=feature_cols, benchmark_cols=benchmark_cols,
                                           time_cols=time_cols, stats_func=stats_func, parse_func=parse_func, cols=cols)
+    print('-----plot monitor------')
     plot_monitor(dic_psi, dic_ks, dic_stats, cols, path)
     return None
 
