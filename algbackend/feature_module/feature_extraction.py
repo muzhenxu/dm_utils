@@ -1,58 +1,102 @@
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_timedelta64_ns_dtype
+import json
 
 
-def span_feature_extraction(t, stats=None):
+def process_history(df_history, rid='apply_risk_id', old_rid='old_rid', created_at='created_at',
+                    pre_created_at='apply_risk_created_at', pre_finish_at='biz_report_time',
+                    pre_expect_at='biz_report_expect_at', pre_period='biz_report_now_period'):
+    df_history = df_history[df_history[created_at] > df_history[pre_expect_at]]
+    df_history = df_history.sort_values(pre_period).drop_duplicates(old_rid, keep='last')
+
+    df_history['yuqi_day'] = (pd.to_datetime(df_history[pre_finish_at].str[:10]) -
+                              pd.to_datetime(df_history[pre_expect_at].str[:10])).map(lambda s: s.days)
+    df_history['order'] = df_history.groupby(rid)[pre_finish_at].rank(ascending=False)
+
+    df_history = df_history.sort_values([rid, pre_created_at], ascending=False)
+    df_history['post_created_at'] = [np.nan] + list(df_history[pre_created_at][:-1])
+    df_history.post_created_at[df_history.order == 1] = df_history[created_at][df_history.order == 1]
+    df_history['diff_date'] = (pd.to_datetime(df_history.post_created_at.str[:10]) -
+                               pd.to_datetime(df_history[pre_finish_at].str[:10])).map(lambda s: s.days)
+    return df_history
+
+
+def latest(t):
+    def __name__():
+        return 'latest'
+
+    return list(t)[0]
+
+
+def spec_mean(t, spec=0):
+    def __name__():
+        return 'spec_mean'
+
+    return np.mean(np.array(t) > spec)
+
+
+def spec_sum(t, spec=0):
+    def __name__():
+        return 'spec_sum'
+
+    return np.sum(np.array(t) > spec)
+
+
+def span_feature_extraction(t, span=None, stats=None, smooth=None):
     """
-    得到历史订单发生时间间隔的统计量
-    :param t: 时间间隔
-    :param stats:
-    :param smooth:
-    :param time_unit:
+    适用于历史逾期天数，历史借贷间隔序列
+    :param t: pd.Series. 按申请时间倒序
+    :param span: 跨度， None|int。
+    :param stats: 统计量， default None
+    :param smooth: 平滑数
     :return:
     """
-    # TODO: stats应该通过eval发挥函数作用，不然是硬编码，不好维护
-    if stats is None:
-        stats = ['latest', 'min', 'max', 'mean', 'median', 'std', 'sum', 'len']
-
-    if len(t) == 0:
-        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
-
-    return t.iloc[-1], np.min(t), np.max(t), np.mean(t), np.median(t), np.std(t), np.sum(t), len(t)
-
-
-def time_hour_feature_extraction(t):
-    """
-    得到历史订单发生时间的各小时出现次数
-    :param t:
-    :return:
-    """
-    t = [i.hour for i in t]
-    l = []
-    for i in range(24):
-        l.append(t.count(i))
-    return tuple(l)
-
-
-def delay_stats_feature_extraction(t, smooth=0):
-    """
-    得到历史订单逾期情况统计量
-    :param t:
-    :param smooth:
-    :return:
-    """
+    name = t.name
     t = list(t)
 
+    if span is not None:
+        t = t[:span]
+    else:
+        span = 'all'
+
+    if smooth is not None:
+        t = t.append(smooth)
+
+    if stats is None:
+        stats = ['latest', 'np.min', 'np.max', 'np.mean', 'np.median', 'np.std', 'np.sum', 'len', 'spec_mean',
+                 'spec_sum']
+
     if len(t) == 0:
-        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+        return json.dumps({name + '_span_' + str(span) + '_' + eval(stats[i]).__name__: np.nan for i in range(len(stats))})
 
-    t.insert(0, smooth)
-    return t[-1], min(t), max(t), np.mean(t), np.median(t), np.var(t), np.mean(t > 0), np.sum(t > 0)
+    return json.dumps({name + '_span_' + str(span) + '_' + eval(stats[i]).__name__: float(eval(stats[i])(t)) for i in range(len(stats))})
 
+
+def time_feature_extraction(t):
+    """
+    适用于历史订单发生时间，还款时间序列，得到历史订单发生时间的各小时/星期出现次数
+    :param t: pd.Series type=datetime
+    :return:
+    """
+    name = t.name
+
+    t = pd.to_datetime(t)
+
+    t1 = list(t.map(lambda s: s.hour))
+    dic = {name + '_' + 'hour_' + str(i): t1.count(i) for i in range(24)}
+
+    t2 = list(t.map(lambda s: s.weekday()))
+    dic.update({name + '_' + 'weekday_' + str(i): t2.count(i) for i in range(7)})
+
+    return json.dumps(dic)
+
+
+class HistoryFeatureExtraction():
 
 class TimeSpanFeatureExtraction(object):
-    def __init__(self, smooth=None, sort=True, margins=True, time_unit='days', col_name_starts='', extract_func=span_feature_extraction, stats=None,fill_value=True):
+    def __init__(self, smooth=None, sort=True, margins=True, time_unit='days', col_name_starts='',
+                 extract_func=span_feature_extraction, stats=None, fill_value=True):
         """
 
         :param col:
@@ -138,6 +182,7 @@ class TimeSpanFeatureExtraction(object):
                 df_feature = pd.concat([df_feature, fe.transform(tmp)], axis=1)
 
         return df_feature
+
 
 if __name__ == '__main__':
     df = pd.read_pickle('../test_data/time_feature.pkl')
