@@ -2,23 +2,26 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import is_timedelta64_ns_dtype
 import json
+import pandas as pd
 
 
-def process_history(df_history, rid='apply_risk_id', old_rid='old_rid', created_at='created_at',
-                    pre_created_at='apply_risk_created_at', pre_finish_at='biz_report_time',
-                    pre_expect_at='biz_report_expect_at', pre_period='biz_report_now_period'):
+def process_history(df_history, rid='apply_risk_id', created_at='created_at', pre_rid='pre_rid',
+                    pre_created_at='pre_created_at', pre_finish_at='pre_finish_at',
+                    pre_expect_at='pre_expect_at', pre_now_period='pre_now_period', pre_total_period='pre_total_period',
+                    order='order', yuqi_day='yuqi_day', diff_date='diff_date'):
     df_history = df_history[df_history[created_at] > df_history[pre_expect_at]]
-    df_history = df_history.sort_values(pre_period).drop_duplicates(old_rid, keep='last')
+    df_history = df_history.sort_values(pre_now_period).drop_duplicates(pre_rid, keep='last')
+    df_history = df_history[df_history[pre_now_period] == df_history[pre_total_period]]
 
-    df_history['yuqi_day'] = (pd.to_datetime(df_history[pre_finish_at].str[:10]) -
-                              pd.to_datetime(df_history[pre_expect_at].str[:10])).map(lambda s: s.days)
-    df_history['order'] = df_history.groupby(rid)[pre_finish_at].rank(ascending=False)
+    df_history[yuqi_day] = (pd.to_datetime(df_history[pre_finish_at].str[:10]) -
+                            pd.to_datetime(df_history[pre_expect_at].str[:10])).map(lambda s: s.days)
+    df_history[order] = df_history.groupby(rid)[pre_finish_at].rank(ascending=False)
 
     df_history = df_history.sort_values([rid, pre_created_at], ascending=False)
-    df_history['post_created_at'] = [np.nan] + list(df_history[pre_created_at][:-1])
-    df_history.post_created_at[df_history.order == 1] = df_history[created_at][df_history.order == 1]
-    df_history['diff_date'] = (pd.to_datetime(df_history.post_created_at.str[:10]) -
-                               pd.to_datetime(df_history[pre_finish_at].str[:10])).map(lambda s: s.days)
+    df_history['post_pre_created_at'] = [np.nan] + list(df_history[pre_created_at][:-1])
+    df_history['post_pre_created_at'][df_history.order == 1] = df_history[created_at][df_history.order == 1]
+    df_history[diff_date] = (pd.to_datetime(df_history['post_pre_created_at'].str[:10]) -
+                             pd.to_datetime(df_history[pre_finish_at].str[:10])).map(lambda s: s.days)
     return df_history
 
 
@@ -43,7 +46,7 @@ def spec_sum(t, spec=0):
     return np.sum(np.array(t) > spec)
 
 
-def span_feature_extraction(t, span=None, stats=None, smooth=None):
+def stats_feature_extraction(t, span=None, stats=None, smooth=None):
     """
     适用于历史逾期天数，历史借贷间隔序列
     :param t: pd.Series. 按申请时间倒序
@@ -61,16 +64,18 @@ def span_feature_extraction(t, span=None, stats=None, smooth=None):
         span = 'all'
 
     if smooth is not None:
-        t = t.append(smooth)
+        t.append(smooth)
 
     if stats is None:
         stats = ['latest', 'np.min', 'np.max', 'np.mean', 'np.median', 'np.std', 'np.sum', 'len', 'spec_mean',
                  'spec_sum']
 
     if len(t) == 0:
-        return json.dumps({name + '_span_' + str(span) + '_' + eval(stats[i]).__name__: np.nan for i in range(len(stats))})
+        return json.dumps(
+            {name + '_span_' + str(span) + '_' + eval(stats[i]).__name__: np.nan for i in range(len(stats))})
 
-    return json.dumps({name + '_span_' + str(span) + '_' + eval(stats[i]).__name__: float(eval(stats[i])(t)) for i in range(len(stats))})
+    return json.dumps({name + '_span_' + str(span) + '_' + eval(stats[i]).__name__: float(eval(stats[i])(t)) for i in
+                       range(len(stats))})
 
 
 def time_feature_extraction(t):
@@ -92,7 +97,87 @@ def time_feature_extraction(t):
     return json.dumps(dic)
 
 
-class HistoryFeatureExtraction():
+class HistoryFeatureExtraction:
+    def __init__(self, span_list=None, stats=None, smooth_f=True):
+        if span_list is None:
+            self.span_list = [3, None]
+        else:
+            self.span_list = span_list
+        self.stats = stats
+        self.smooth_f = smooth_f
+
+    def fit(self, df, rid='apply_risk_id', created_at='created_at', pre_rid='pre_rid',
+            pre_created_at='pre_created_at', pre_finish_at='pre_finish_at',
+            pre_expect_at='pre_expect_at', pre_now_period='pre_now_period', pre_total_period='pre_total_period',
+            order='order', yuqi_day='yuqi_day', diff_date='diff_date'):
+        self.kwargs = {'rid': 'apply_risk_id', 'created_at': 'created_at', 'pre_rid': 'pre_rid',
+                       'pre_created_at': 'pre_created_at', 'pre_finish_at': 'pre_finish_at',
+                       'pre_expect_at': 'pre_expect_at', 'pre_now_period': 'pre_now_period',
+                       'pre_total_period': 'pre_total_period',
+                       'order': 'order', 'yuqi_day': 'yuqi_day', 'diff_date': 'diff_date'}
+        self.rid = rid
+        self.created_at = created_at
+        self.pre_rid = pre_rid
+        self.pre_created_at = pre_created_at
+        self.pre_finish_at = pre_finish_at
+        self.pre_expect_at = pre_expect_at
+        self.pre_now_period = pre_now_period
+        self.pre_total_period = pre_total_period
+        self.order = order
+        self.yuqi_day = yuqi_day
+        self.diff_date = diff_date
+        df = process_history(df, rid=rid, created_at=created_at, pre_rid=pre_rid,
+                             pre_created_at=pre_created_at, pre_finish_at=pre_finish_at,
+                             pre_expect_at=pre_expect_at, pre_now_period=pre_now_period,
+                             pre_total_period=pre_total_period, order=order, yuqi_day=yuqi_day, diff_date=diff_date)
+        if self.smooth_f is None:
+            self.yq_smooth = None
+            self.span_smooth = None
+        else:
+            self.yq_smooth = df[yuqi_day].median()
+            self.span_smooth = df[diff_date].median()
+
+    def transform(self, df):
+        df = process_history(df, **self.kwargs)
+        df = df.sort_values([self.rid, self.order])
+
+        df_feature = pd.DataFrame()
+
+        for c in [self.diff_date, self.yuqi_day]:
+            if c == self.diff_date:
+                smooth = self.span_smooth
+            else:
+                smooth = self.yq_smooth
+            for span in self.span_list:
+                df_feature = pd.concat([df_feature, df.groupby(self.rid)[c].agg(
+                    lambda s: stats_feature_extraction(s, span=span, smooth=smooth)).apply(
+                    lambda s: pd.Series(json.loads(s)))], axis=1)
+        for c in [self.pre_created_at, self.pre_finish_at]:
+            df_feature = pd.concat(
+                [df_feature,
+                 df.groupby(self.rid)[c].agg(time_feature_extraction).apply(lambda s: pd.Series(json.loads(s)))],
+                axis=1)
+        return df_feature
+
+
+def span_feature_extraction(t, stats=None):
+    """
+    得到历史订单发生时间间隔的统计量
+    :param t: 时间间隔
+    :param stats:
+    :param smooth:
+    :param time_unit:
+    :return:
+    """
+    # TODO: stats应该通过eval发挥函数作用，不然是硬编码，不好维护
+    if stats is None:
+        stats = ['latest', 'min', 'max', 'mean', 'median', 'std', 'sum', 'len']
+
+    if len(t) == 0:
+        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+
+    return t.iloc[-1], np.min(t), np.max(t), np.mean(t), np.median(t), np.std(t), np.sum(t), len(t)
+
 
 class TimeSpanFeatureExtraction(object):
     def __init__(self, smooth=None, sort=True, margins=True, time_unit='days', col_name_starts='',
