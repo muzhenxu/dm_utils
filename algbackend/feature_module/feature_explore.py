@@ -4,6 +4,11 @@ from collections import Counter
 from collections import defaultdict
 import os
 
+def get_max_same_count(c):
+    try:
+        return c.value_counts().iloc[0]
+    except:
+        return len(c)
 
 def desc_df(df_origin):
     df = df_origin.copy()
@@ -15,10 +20,7 @@ def desc_df(df_origin):
     nunique_value = df.apply(lambda c: c.nunique())
     df_desc['diff_values_num'] = nunique_value
 
-    try:
-        same_value = df.apply(lambda c: c.value_counts().iloc[0])
-    except:
-        same_value = 0
+    same_value = df.apply(get_max_same_count)
     df_desc['most_value_num'] = same_value
     df_desc['same_ratio'] = same_value / df.shape[0]
 
