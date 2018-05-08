@@ -11,7 +11,7 @@ def process_history(df_history, rid='apply_risk_id', created_at='created_at', pr
                     order='order', yuqi_day='yuqi_day', diff_date='diff_date'):
     df_history = df_history[
         (df_history[created_at] > df_history[pre_finish_at]) & (df_history[pre_finish_at].str[:10] != '1000-01-01')]
-    df_history = df_history.sort_values(pre_now_period).drop_duplicates(pre_rid, keep='last')
+    # df_history = df_history.sort_values(pre_now_period).drop_duplicates(pre_rid, keep='last')
     df_history = df_history[df_history[pre_now_period] == df_history[pre_total_period]]
 
     df_history[yuqi_day] = (pd.to_datetime(df_history[pre_finish_at].str[:10]) -
