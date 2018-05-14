@@ -1,4 +1,4 @@
-from .monitor import model_monitor
+from .monitor import *
 from .psi import Psi
 
-__all__ = ['model_monitor', 'Psi']
+__all__ = ['model_monitor', 'Psi', 'get_psi']
