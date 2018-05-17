@@ -87,7 +87,8 @@ def ks_curve(y_true, y_pred, ax, loc='best', label=''):
     t = sorted(y_pred)
     s = len(y_pred)
     # prob = [sum((df['y_pred'] >= i)) / df.shape[0] for i in thr]
-    prob = [0] + [(s - t.index(i)) / s for i in thr[1:]]
+    # prob = [0] + [(s - t.index(i)) / s for i in thr[1:]]
+    x = [1.0*i/len(tpr) for i in range(len(tpr))]
 
     threshold = prob[np.argmax(np.array(pos) - np.array(neg))]
     max_ks = np.max(np.array(pos) - np.array(neg))
