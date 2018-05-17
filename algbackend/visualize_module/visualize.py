@@ -257,7 +257,7 @@ def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=Non
                 #
                 #     i += 1
                 # plt.tight_layout()
-    fig2 = plt.figure(figsize=figsize)
+    fig2 = plt.figure(figsize=(14, 8 * len(data))))
     spec2 = gridspec.GridSpec(4, len(data))
     ax1 = fig2.add_subplot(spec2[0, 0])
 
