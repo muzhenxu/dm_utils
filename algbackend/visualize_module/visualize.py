@@ -258,10 +258,9 @@ def plot_lift(y_true, y_pred, ax, label='', ncut=100):
     cut_y2=lift.get_value(4,'lift')
     cut_y3=lift.get_value(9,'lift')
  
-    plt.rcdefaults()#重置rc所有参数，初始化
-    plt.rcParams['font.sans-serif']=['Microsoft YaHei'] #用来正常显示中文标签
-    plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
-    plt.rc('figure', figsize=(8,6))
+    # plt.rcdefaults()#重置rc所有参数，初始化
+    # plt.rcParams['font.sans-serif']=['Microsoft YaHei'] #用来正常显示中文标签
+    # plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
     ax.plot(qcut_x, lift.lift, color='blue', lw=2, label='Lift Curve') 
     ax.plot([cut_x1], [cut_y1],'o',color='red', label='Top '+ str(int((100*(1/ncut)))) +'pct Lift: %0.1f' % cut_y1) 
     ax.plot([cut_x2], [cut_y2],'o',color='firebrick', label='Top '+ str(int((500*(1/ncut)))) +'pct Lift: %0.1f' % cut_y2) 
