@@ -224,6 +224,54 @@ def plot_acc_od_ps_rc(y_true, y_pred, ax, cut_points=None, bins=10, label='', lo
     ax.legend(loc=loc)
 
 
+def plot_lift(y_true, y_pred, ax, label='', ncut=100):
+    """Plot Lift curve.
+
+    Parameters:
+    -----------
+    y_true: array_like, true binary labels
+
+    y_pred: array_like, predicted probability estimates 
+
+    Returns:
+    --------
+
+    """
+    from sklearn.metrics import roc_curve, auc
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import numpy as np
+    
+    
+    qcut_x=[i+1/ncut for i in np.arange(0,1,1/ncut)]
+    qcut=pd.qcut(-y_pred,q=ncut,labels=np.arange(0,1,1/ncut))
+    overall_resp=np.mean(y_true)
+    sample_size=[1 for i in range(len(y_true))]
+    qcut_cumresp=pd.DataFrame({'response':y_true}).groupby(qcut).agg(sum).sort_index().cumsum()
+    qcut_cumsamp=pd.DataFrame({'count':sample_size},index=y_true.index).groupby(qcut).agg(sum).sort_index().cumsum()
+    lift=qcut_cumsamp.join(qcut_cumresp)
+    lift['lift']=lift['response']/(lift['count']*overall_resp)
+    cut_x1=1*(1/ncut)
+    cut_x2=5*(1/ncut)
+    cut_x3=10*(1/ncut)
+    cut_y1=lift.get_value(0,'lift')
+    cut_y2=lift.get_value(4,'lift')
+    cut_y3=lift.get_value(9,'lift')
+ 
+    plt.rcdefaults()#重置rc所有参数，初始化
+    plt.rcParams['font.sans-serif']=['Microsoft YaHei'] #用来正常显示中文标签
+    plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+    plt.rc('figure', figsize=(8,6))
+    ax.plot(qcut_x, lift.lift, color='blue', lw=2, label='Lift Curve') 
+    ax.plot([cut_x1], [cut_y1],'o',color='red', label='Top '+ str(int((100*(1/ncut)))) +'pct Lift: %0.1f' % cut_y1) 
+    ax.plot([cut_x2], [cut_y2],'o',color='firebrick', label='Top '+ str(int((500*(1/ncut)))) +'pct Lift: %0.1f' % cut_y2) 
+    ax.plot([cut_x3], [cut_y3],'o',color='green', label='Top '+ str(int((1000*(1/ncut)))) +'pct Lift: %0.1f' % cut_y3) 
+    ax.set_xlabel('Proportion')
+    ax.set_ylabel('Lift')
+    ax.set_title(f'{label} Lift Curve')
+    ax.legend(loc="best")
+
+
 def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=None, cut_points=None, save_fig=False):
     """
 
@@ -272,6 +320,8 @@ def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=Non
         sorting_ability(y_true, y_pred, ax3, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
         ax4 = fig2.add_subplot(spec2[3, i])
         plot_acc_od_ps_rc(y_true, y_pred, ax4, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
+        ax5 = fig2.add_subplot(spec2[4, i])
+        plot_lift(y_true, y_pred, ax5, label=laebl)
 
         i += 1
     plt.tight_layout()
