@@ -129,7 +129,7 @@ def boost_hist_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, 
         x2 = feature_evaluation.feature_discretion(x, th)
     else:
         if cut_points is None:
-            x2 = pd.qcut(np.array(x), q=10)
+            x2 = pd.qcut(np.array(x), q=10, duplicates='drop')
         else:
             x2 = pd.cut(np.array(x), bins=cut_points, include_lowest=True)
     df['x'] = np.array(x2)
@@ -334,10 +334,43 @@ def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=Non
         plt.savefig(path)
     plt.show()
 
-def feature_curve(x, y):
-    
 
-def feature_plot(df, y, bins=10, figsize=(7, 4), plt_label='overdue rate', row_num=3, path=None, cut_points=None, save_fig=True):
+def feature_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, method='avg', cut_points=None, rotation=55):
+    if target is None:
+        target = ''
+    df = pd.DataFrame()
+    if x.nunique() > 20:
+        if method != 'avg':
+            th = feature_evaluation.cut_points(x, y, max_depth=max_depth, min_samples_leaf=min_samples_leaf)
+            x2 = feature_evaluation.feature_discretion(x, th)
+        else:
+            if cut_points is None:
+                x2 = pd.qcut(np.array(x), q=10, duplicates='drop')
+            else:
+                x2 = pd.cut(np.array(x), bins=cut_points, include_lowest=True)
+    else:
+        x2 = x
+    df['x'] = np.array(x2)
+    df['y'] = np.array(y)
+    t = pd.pivot_table(df, values='y', index='x', aggfunc=[np.mean, len]).reset_index().sort_values('x',
+                                                                                                    ascending=True)
+    t.columns = ['x', 'y', 'l']
+
+    ax.bar(range(t.shape[0]), t.l, tick_label=t.x, color='lightblue', label='volume', yerr=0.00001, width=0.5)
+    ax.set_ylim([0, max(t.l) * 1.2])
+    ax.set_ylabel('volume')
+    # ax.legend(loc="upper right")
+    ax.set_xticklabels(t.x, rotation=rotation)
+
+    ax2 = ax.twinx()
+
+    ax2.plot(range(t.shape[0]), t.y, color='b', label='overdue rate')
+    ax.set_xticklabels(t.x, rotation=rotation)
+    ax2.set_title('%s' % target)
+    ax2.set_ylabel('%s Overdue Rate' % target)
+    ax2.legend(loc="upper right")
+
+def feature_plot(df, y, bins=10, figsize=(7, 4), plt_label='overdue rate', col_num=3, path=None, cut_points=None, save_fig=True):
     """
 
     :param data: dict. i.e. dict. i.e. {'model1': [y_true1, y_pred1], 'model2': [y_true2, y_pred2]]}
@@ -348,23 +381,15 @@ def feature_plot(df, y, bins=10, figsize=(7, 4), plt_label='overdue rate', row_n
     :param save_fig:
     :return:
     """
-    col_num = df.shape[1] // row_num + 1
-    fig2 = plt.figure(figsize=(figsize[0] * row_num, figsize[1] * col_num))
+    row_num = df.shape[1] // col_num + 1
+    fig2 = plt.figure(figsize=(figsize[0] * col_num, figsize[1] * row_num))
     spec2 = gridspec.GridSpec(col_num, row_num)
 
-    i = 0
-    for label, v in data.items():
-        y_true, y_pred = v[0], v[1]
-        ax2 = fig2.add_subplot(spec2[1, i])
-        ks_curve(y_true, y_pred, ax2, label=label)
-        ax3 = fig2.add_subplot(spec2[2, i])
-        sorting_ability(y_true, y_pred, ax3, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
-        ax4 = fig2.add_subplot(spec2[3, i])
-        plot_acc_od_ps_rc(y_true, y_pred, ax4, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
-        ax5 = fig2.add_subplot(spec2[4, i])
-        plot_lift(y_true, y_pred, ax5, label=label)
-
-        i += 1
+    for i, v in enumerate(df.columns):
+        row_n = i // col_num
+        col_n = i % col_num
+        ax2 = fig2.add_subplot(spec2[row_n, col_n])
+        feature_curve(df[v], y, ax2, target=v)
     plt.tight_layout()
 
 
