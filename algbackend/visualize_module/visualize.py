@@ -367,7 +367,7 @@ def feature_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, met
     ax2.plot(range(t.shape[0]), t.y, color='b', label='overdue rate')
     ax.set_xticklabels(t.x, rotation=rotation)
     ax2.set_title('%s' % target)
-    ax2.set_ylabel('%s Overdue Rate' % target)
+    ax2.set_ylabel('Overdue Rate')
     ax2.legend(loc="upper right")
 
 def feature_plot(df, y, bins=10, figsize=(7, 4), plt_label='overdue rate', col_num=3, path=None, cut_points=None, save_fig=True):
@@ -381,9 +381,13 @@ def feature_plot(df, y, bins=10, figsize=(7, 4), plt_label='overdue rate', col_n
     :param save_fig:
     :return:
     """
-    row_num = df.shape[1] // col_num + 1
+    if type(y) == str:
+        y = df.pop(y)
+    row_num = df.shape[1] // col_num
+    if df.shape[1] % col_num > 0:
+        row_num += 1
     fig2 = plt.figure(figsize=(figsize[0] * col_num, figsize[1] * row_num))
-    spec2 = gridspec.GridSpec(col_num, row_num)
+    spec2 = gridspec.GridSpec(row_num, col_num)
 
     for i, v in enumerate(df.columns):
         row_n = i // col_num
