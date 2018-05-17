@@ -187,9 +187,8 @@ def xgb_model_evaluation(df, target, test=None, test_y=None, params='gbtree', n_
     pred_train = bst.predict(dtr)
     df_train = pd.DataFrame({col_name: train_y, 'y_pred': pred_train})
 
-    return bst, df_cv, df_test, df_train
-
-
+    return bst, df_cv, df_test, df_val, df_train
+    
 def cmpt_cv(dic_cv):
     df_cv = pd.DataFrame(dic_cv)
     df_cv = df_cv.describe().loc[['mean', 'std', 'min', 'max']]
@@ -203,7 +202,7 @@ def model_cost_plot(model_result, spec_p=None, bins=50, path='reportsource/model
 
     if not os.path.exists(os.path.dirname(os.path.abspath(path))):
         os.mkdir(os.path.dirname(os.path.abspath(path)))
-    plt.savefig(path)
+    plt.savefig(path)   
 
 
 # TODO: xgb_model_evaluation需要泛化
