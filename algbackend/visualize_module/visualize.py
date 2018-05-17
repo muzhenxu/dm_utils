@@ -271,7 +271,7 @@ def plot_lift(y_true, y_pred, ax, label='', ncut=100):
     ax.legend(loc="best")
 
 
-def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=None, cut_points=None, save_fig=False):
+def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=None, cut_points=None, save_fig=True):
     """
 
     :param data: dict. i.e. dict. i.e. {'model1': [y_true1, y_pred1], 'model2': [y_true2, y_pred2]]}
@@ -334,52 +334,47 @@ def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=Non
         plt.savefig(path)
     plt.show()
 
-# def eva_plot(data, bins=10, figsize=(14, 10), path=None, cut_points=None, save_fig=False):
-#     if cut_points is None:
-#         for _, y_pred, label in data:
-#             if label == 'train':
-#                 _, cut_points = pd.qcut(y_pred, q=10, retbins=True)
-#                 break
-#
-#     # f, axes = plt.subplots(4, len(data), figsize=figsize)
-#
-#     # roc_curve(data, axes[0][0])
-#     #
-#     # i = 0
-#     # for y_true, y_pred, label in data:
-#     #     ks_curve(y_true, y_pred, axes[1][i], label=label)
-#     #     sorting_ability(y_true, y_pred, axes[2][i], bins=bins, cut_points=cut_points, label=label)
-#     #     plot_acc_od_ps_rc(y_true, y_pred, axes[3][i], bins=bins, cut_points=cut_points, label=label)
-#     #
-#     #     i += 1
-#     # plt.tight_layout()
-#
-#     gs = gridspec.GridSpec(4, 2)
-#     gs1.update(left=0.05, right=0.48, wspace=0.05)
-#     ax1 = plt.subplot(gs[0, :])
-#
-#     roc_curve(data, ax1)
-#
-#     i = 0
-#     for y_true, y_pred, label in data:
-#         ax2 = plt.subplot(gs[1,i])
-#         ks_curve(y_true, y_pred, ax2, label=label)
-#         ax3 = plt.subplot(gs[2,i])
-#         sorting_ability(y_true, y_pred, ax3, bins=bins, cut_points=cut_points, label=label)
-#         ax4 = plt.subplot(gs[3,i])
-#         plot_acc_od_ps_rc(y_true, y_pred, ax4, bins=bins, cut_points=cut_points, label=label)
-#
-#         i += 1
-#     plt.tight_layout()
-#
-#
-#     if save_fig:
-#         if not os.path.exists('report'):
-#             os.mkdir('report')
-#         if path is None:
-#             path = 'eva_plot.png'
-#         plt.savefig(os.path.join('report', path))
-#     plt.show()
+def feature_curve(x, y):
+    
+
+def feature_plot(df, y, bins=10, figsize=(7, 4), plt_label='overdue rate', row_num=3, path=None, cut_points=None, save_fig=True):
+    """
+
+    :param data: dict. i.e. dict. i.e. {'model1': [y_true1, y_pred1], 'model2': [y_true2, y_pred2]]}
+    :param bins:
+    :param figsize:
+    :param path:
+    :param cut_points:
+    :param save_fig:
+    :return:
+    """
+    col_num = df.shape[1] // row_num + 1
+    fig2 = plt.figure(figsize=(figsize[0] * row_num, figsize[1] * col_num))
+    spec2 = gridspec.GridSpec(col_num, row_num)
+
+    i = 0
+    for label, v in data.items():
+        y_true, y_pred = v[0], v[1]
+        ax2 = fig2.add_subplot(spec2[1, i])
+        ks_curve(y_true, y_pred, ax2, label=label)
+        ax3 = fig2.add_subplot(spec2[2, i])
+        sorting_ability(y_true, y_pred, ax3, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
+        ax4 = fig2.add_subplot(spec2[3, i])
+        plot_acc_od_ps_rc(y_true, y_pred, ax4, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
+        ax5 = fig2.add_subplot(spec2[4, i])
+        plot_lift(y_true, y_pred, ax5, label=label)
+
+        i += 1
+    plt.tight_layout()
+
+
+    if save_fig:
+        if path is None:
+            if not os.path.exists('reportsource'):
+                os.mkdir('reportsource')
+            path = 'reportsource/feature_plot.png'
+        plt.savefig(path)
+    plt.show()
 
 
 def profit_line(y_true, y_pred, ax, label='', cost_model=1, rule_pass=0.95, gain=305, loss=2000, cost_sell=20,
