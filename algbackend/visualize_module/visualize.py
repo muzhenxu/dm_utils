@@ -271,7 +271,7 @@ def plot_lift(y_true, y_pred, ax, label='', ncut=100):
     ax.legend(loc="best")
 
 
-def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=None, cut_points=None, save_fig=True):
+def eva_plot(data, bins=10, figsize=（7, 4), plt_label='overdue rate', path=None, cut_points=None, save_fig=True):
     """
 
     :param data: dict. i.e. dict. i.e. {'model1': [y_true1, y_pred1], 'model2': [y_true2, y_pred2]]}
@@ -304,7 +304,7 @@ def eva_plot(data, bins=10, figsize=(14, 16), plt_label='overdue rate', path=Non
                 #
                 #     i += 1
                 # plt.tight_layout()
-    fig2 = plt.figure(figsize=(7 * len(data), 16))
+    fig2 = plt.figure(figsize=(figsize[0] * len(data), figsize[1] * 5))
     spec2 = gridspec.GridSpec(5, len(data))
     ax1 = fig2.add_subplot(spec2[0, 0])
 
