@@ -271,7 +271,7 @@ def plot_lift(y_true, y_pred, ax, label='', ncut=100):
     ax.legend(loc="best")
 
 
-def eva_plot(data, bins=10, figsize=（7, 4), plt_label='overdue rate', path=None, cut_points=None, save_fig=True):
+def eva_plot(data, bins=10, figsize=(7, 4), plt_label='overdue rate', path=None, cut_points=None, save_fig=True):
     """
 
     :param data: dict. i.e. dict. i.e. {'model1': [y_true1, y_pred1], 'model2': [y_true2, y_pred2]]}
@@ -356,7 +356,7 @@ def feature_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, met
                                                                                                     ascending=True)
     t.columns = ['x', 'y', 'l']
 
-    ax.bar(range(t.shape[0]), t.l, tick_label=t.x, color='lightblue', label='volume', yerr=0.00001, width=0.5)
+    ax.bar(range(t.shape[0]), t.l, tick_label=t.x, label='volume', yerr=0.00001, width=0.5)
     ax.set_ylim([0, max(t.l) * 1.2])
     ax.set_ylabel('volume')
     # ax.legend(loc="upper right")
@@ -364,7 +364,7 @@ def feature_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, met
 
     ax2 = ax.twinx()
 
-    ax2.plot(range(t.shape[0]), t.y, color='b', label='overdue rate')
+    ax2.plot(range(t.shape[0]), t.y, label='overdue rate')
     ax.set_xticklabels(t.x, rotation=rotation)
     ax2.set_title('%s' % target)
     ax2.set_ylabel('Overdue Rate')
