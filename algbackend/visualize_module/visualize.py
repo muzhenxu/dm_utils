@@ -356,7 +356,7 @@ def feature_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, met
                                                                                                     ascending=True)
     t.columns = ['x', 'y', 'l']
 
-    ax.bar(range(t.shape[0]), t.l, tick_label=t.x, label='volume', yerr=0.00001, width=0.5)
+    ax.bar(range(t.shape[0]), t.l, tick_label=t.x, label='volume', yerr=0.00001, width=0.5, alpha=0.5)
     ax.set_ylim([0, max(t.l) * 1.2])
     ax.set_ylabel('volume')
     # ax.legend(loc="upper right")
@@ -364,7 +364,7 @@ def feature_curve(x, y, ax, target=None, max_depth=5, min_samples_leaf=0.01, met
 
     ax2 = ax.twinx()
 
-    ax2.plot(range(t.shape[0]), t.y, label='overdue rate')
+    ax2.plot(range(t.shape[0]), t.y, label='overdue rate', linestyle='--', marker='o', markersize=5)
     ax.set_xticklabels(t.x, rotation=rotation)
     ax2.set_title('%s' % target)
     ax2.set_ylabel('Overdue Rate')
