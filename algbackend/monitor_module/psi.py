@@ -38,7 +38,7 @@ class Psi(object):
 
     @staticmethod
     def qcut(l, q=10, precision=8):
-        _, cut_points = pd.qcut(l, q=q, retbins=True, precision=precision)
+        _, cut_points = pd.qcut(l, q=q, retbins=True, precision=precision, duplicates='drop')
 
         cut_points = list(cut_points)
 
