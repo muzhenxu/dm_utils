@@ -194,8 +194,8 @@ def model_monitor(df, hue='model_id', score_cols='model_record_response_data', b
                                           time_cols=time_cols, stats_func=stats_func, parse_func=parse_func, cols=cols)
     print('-----plot monitor------')
     plot_monitor(dic_psi, dic_ks, dic_stats, cols, path)
-    return None
+    return dic_psi, dic_ks, dic_stats
 
 if __name__ == '__main__':
     df = pd.read_pickle('../test_data/model_monitor_test_data.pkl')
-    model_monitor(df, path='../test_output/model_monitor.html')
+    dic_psi, dic_ks, dic_stats = model_monitor(df, path='../test_output/model_monitor.html')
