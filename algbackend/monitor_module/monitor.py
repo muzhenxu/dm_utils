@@ -52,7 +52,10 @@ def get_psi(df, hue='model_id', score_cols='model_record_response_data', benchma
     psi = Psi()
     for i in df[hue].unique():
         df_feature = df[df[hue] == i]
-        df_feature['score'] = df_feature[score_cols].map(lambda s: score_func(s, key=score_keys))
+        if score_func is not None:
+            df_feature['score'] = df_feature[score_cols].map(lambda s: score_func(s, key=score_keys))
+        else:
+            df_feature['score'] = df_feature[score_cols]
         df_feature = df_feature.dropna(subset=['score'], axis=0)
 
         psi.get_cutpoints(df_feature.score[df_feature[benchmark_cols] == 1])
