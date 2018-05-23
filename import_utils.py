@@ -1,5 +1,8 @@
 import os
 path = os.path.join(os.path.abspath('').rsplit('knjk', 1)[0], 'knjk')
+
+os.environ.update({'JAVA_HOME': '/usr/local/jdk1.8.0_74'})
+
 import pandas as pd
 import numpy as np
 import datetime
@@ -34,8 +37,11 @@ InteractiveShell.ast_node_interactivity = "all"
 target_cols = ['00d', '01d', '03d', '07d', '14d', '30d']
 
 datapath = 'datasource/'
-mtlpath = path + '/mtlsource/'
+mtlpath = 'mtlsource/'
 reportpath = 'reportsource/'
+
+
+
 
 if not os.path.exists(mtlpath):
     os.makedirs(mtlpath)
