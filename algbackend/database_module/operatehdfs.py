@@ -16,6 +16,13 @@ class OperateHdfs(object):
         if use_table:
             columns = os.popen('hive -e "desc %s"' % table_name).readlines()
             columns = [c.split('\t')[0].strip() for c in columns]
+        cmd = ['hive', '-e', '"desc %s"' % table_name]
+        with open(csv_path, 'w') as f:
+            process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.PIPE)
+        for line in iter(process.stderr.readline, b''):
+            print(line)
+        process.wait()
+
             return columns
 
     def readHdfsFile(self, file_path):
