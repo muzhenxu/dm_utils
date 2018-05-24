@@ -23,7 +23,7 @@ class OperateHdfs(object):
             print(line)
         process.wait()
 
-            return columns
+        return columns
 
     def readHdfsFile(self, file_path):
         l = []
