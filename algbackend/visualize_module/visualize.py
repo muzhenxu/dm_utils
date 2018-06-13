@@ -376,7 +376,7 @@ def eva_plot(data, bins=10, figsize=(7, 4), plt_label='overdue rate', ncut=50, p
         ax4 = fig2.add_subplot(spec2[3, i])
         plot_acc_od_ps_rc(y_true, y_pred, ax4, bins=bins, cut_points=cut_points, label=label, plt_label=plt_label)
         ax5 = fig2.add_subplot(spec2[4, i])
-        plot_lift(y_true, y_pred, ax5, label=label, ncut=ncut)
+        plot_lift(y_true, y_pred, ax5, label=label, n_cut=ncut)
 
         i += 1
     plt.tight_layout()
