@@ -264,14 +264,14 @@ def plot_acc_od_ps_rc(y_true, y_pred, ax, cut_points=None, bins=10, label='', lo
 #     ax.set_title(f'{label} Lift Curve')
 #     ax.legend(loc="best")
 
-def plot_lift(y_true, y_pred, ax, label='', ncut=50):
+def plot_lift(y_true, y_pred, ax, label='', n_cut=50):
     """Plot Lift curve.
 
     Parameters:
     -----------
     y_true: array_like, true binary labels
 
-    y_pred: array_like, predicted probability estimates 
+    y_pred: array_like, predicted probability estimates
 
     Returns:
     --------
@@ -281,30 +281,46 @@ def plot_lift(y_true, y_pred, ax, label='', ncut=50):
     import matplotlib.pyplot as plt
     import pandas as pd
     import numpy as np
-    
-    
-    qcut_x=[i+1/ncut for i in np.arange(0,1,1/ncut)]
-    qcut=pd.qcut(-y_pred,q=ncut,labels=np.arange(0,1,1/ncut))
-    overall_resp=np.mean(y_true)
-    sample_size=[1 for i in range(len(y_true))]
-    qcut_cumresp=pd.DataFrame({'response':y_true}).groupby(qcut).agg(sum).sort_index().cumsum()
-    qcut_cumsamp=pd.DataFrame({'count':sample_size},index=y_true.index).groupby(qcut).agg(sum).sort_index().cumsum()
-    lift=qcut_cumsamp.join(qcut_cumresp)
-    lift['lift']=lift['response']/(lift['count']*overall_resp)
-    cut_x1=1*(1/ncut)
-    cut_x2=5*(1/ncut)
-    cut_x3=10*(1/ncut)
-    cut_y1=lift.get_value(0,'lift')
-    cut_y2=lift.get_value(4,'lift')
-    cut_y3=lift.get_value(9,'lift')
- 
-    # plt.rcdefaults()#重置rc所有参数，初始化
-    # plt.rcParams['font.sans-serif']=['Microsoft YaHei'] #用来正常显示中文标签
-    # plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
-    ax.plot(qcut_x, lift.lift, label='Lift Curve') 
-    ax.plot([cut_x1], [cut_y1],'o', label='Top '+ str(int((200*(1/ncut)))) +'pct Lift: %0.1f' % cut_y1) 
-    ax.plot([cut_x2], [cut_y2],'o', label='Top '+ str(int((500*(1/ncut)))) +'pct Lift: %0.1f' % cut_y2) 
-    ax.plot([cut_x3], [cut_y3],'o', label='Top '+ str(int((1000*(1/ncut)))) +'pct Lift: %0.1f' % cut_y3) 
+
+    tmp, ret = pd.qcut(-y_pred, q=n_cut, duplicates='drop', retbins=True)
+    try:
+        ncut = len(tmp.cat.categories)
+    except:
+        ncut = len(tmp.categories)
+
+    qcut_x = [i + 1 / ncut for i in np.arange(0, 1, 1 / ncut)]
+    qcut = pd.qcut(-y_pred, q=n_cut, labels=np.arange(0, 1, 1 / ncut), duplicates='drop')
+    overall_resp = np.mean(y_true)
+    sample_size = [1 for i in range(len(y_true))]
+    qcut_cumresp = pd.DataFrame({'response': y_true}).groupby(qcut).agg(sum).sort_index().cumsum()
+    qcut_cumsamp = pd.DataFrame({'count': sample_size}, index=y_true.index).groupby(qcut).agg(sum).sort_index().cumsum()
+    lift = qcut_cumsamp.join(qcut_cumresp)
+    lift['lift'] = lift['response'] / (lift['count'] * overall_resp)
+    # cut_x1 = 1 * (1 / ncut)
+    # cut_x2 = 5 * (1 / ncut)
+    # cut_x3 = 10 * (1 / ncut)
+    # cut_y1 = lift.get_value(0, 'lift')
+    # cut_y2 = lift.get_value(4, 'lift')
+    # cut_y3 = lift.get_value(9, 'lift')
+    #
+    #
+    # # plt.rcdefaults()#重置rc所有参数，初始化
+    # # plt.rcParams['font.sans-serif']=['Microsoft YaHei'] #用来正常显示中文标签
+    # # plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+    # ax.plot(qcut_x, lift.lift, label='Lift Curve')
+    # ax.plot([cut_x1], [cut_y1], 'o', label='Top ' + str(int((200 * (1 / ncut)))) + 'pct Lift: %0.1f' % cut_y1)
+    # ax.plot([cut_x2], [cut_y2], 'o', label='Top ' + str(int((500 * (1 / ncut)))) + 'pct Lift: %0.1f' % cut_y2)
+    # ax.plot([cut_x3], [cut_y3], 'o', label='Top ' + str(int((1000 * (1 / ncut)))) + 'pct Lift: %0.1f' % cut_y3)
+
+    ax.plot(qcut_x, lift.lift, label='Lift Curve')
+    for i in [1, 5, 10]:
+        try:
+            cut_x = i * (1 / ncut)
+            cut_y = lift.get_value(i-1, 'lift')
+            ax.plot([cut_x], [cut_y], 'o', label='Top ' + str(int((i * 100 * (1 / ncut)))) + 'pct Lift: %0.1f' % cut_y)
+        except:
+            pass
+
     ax.set_xlabel('Proportion')
     ax.set_ylabel('Lift')
     ax.set_title(f'{label} Lift Curve')
