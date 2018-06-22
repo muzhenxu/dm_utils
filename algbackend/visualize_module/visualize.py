@@ -326,6 +326,44 @@ def plot_lift(y_true, y_pred, ax, label='', n_cut=50):
     ax.set_title(f'{label} Lift Curve')
     ax.legend(loc="best")
 
+def auc_ks_eva_plot(data, bins=10, figsize=(7, 4), plt_label='overdue rate', n_cut=50, path=None, cut_points=None,
+             save_fig=True):
+    """
+
+    :param data: dict. i.e. dict. i.e. {'model1': [y_true1, y_pred1], 'model2': [y_true2, y_pred2]]}
+    :param bins:
+    :param figsize:
+    :param path:
+    :param cut_points:
+    :param save_fig:
+    :return:
+    """
+    fig2 = plt.figure(figsize=(figsize[0] * 2, figsize[1] * 2))
+    spec2 = gridspec.GridSpec(2, 2)
+    ax1 = fig2.add_subplot(spec2[0, 0])
+
+    from collections import defaultdict
+    dic_all = defaultdict(dict)
+
+    roc_curve(data, ax1)
+
+    i = 1
+    for label, v in data.items():
+        j = i // 2
+        h = i % 2
+        y_true, y_pred = v[0], v[1]
+        ax2 = fig2.add_subplot(spec2[j, h])
+        ks_curve(y_true, y_pred, ax2, label=label)
+        i += 1
+    plt.tight_layout()
+
+    if save_fig:
+        if path is None:
+            if not os.path.exists('reportsource'):
+                os.mkdir('reportsource')
+            path = 'reportsource/auc_ks_eva_plot.png'
+        plt.savefig(path)
+        plt.show()
 
 def eva_plot(data, bins=10, figsize=(7, 4), plt_label='overdue rate', ncut=50, path=None, cut_points=None, save_fig=True):
     """

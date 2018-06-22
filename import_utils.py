@@ -21,6 +21,7 @@ from pandas.api.types import is_numeric_dtype
 from .algbackend.feature_module import feature_evaluation, feature_extraction, feature_encoding, feature_explore
 from .algbackend.database_module.operatehdfs import OperateHdfs
 from .algbackend.model_module.model_evaluation import xgb_model_evaluation, params, model_cost_cmpt, model_cost_plot
+from .algbackend.model_module import FFMEncoder
 from .algbackend import data_utils
 from .algbackend.visualize_module import visualize, facets
 from .algbackend.rule_module.rule_learning import Ripperk, chi2_calc

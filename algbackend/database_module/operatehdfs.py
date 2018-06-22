@@ -77,7 +77,7 @@ class OperateHdfs(object):
         columns = [c.split('\t')[0].strip() for c in columns]
 
         # cmd = 'hive -e "select * from %s" >> %s' % (table_name, csv_path)
-        cmd = ['hive', '-e', '"select * from %s"' % table_name]
+        cmd = ['hive', '--showHeader=true', '--outputformat=csv2', '--silent=true', '-e', '"select * from %s"' % table_name]
         with open(csv_path, 'w') as f:
             process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.PIPE)
         for line in iter(process.stderr.readline, b''):
