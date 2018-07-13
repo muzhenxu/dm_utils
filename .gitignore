@@ -3,3 +3,4 @@ __pycache__/
 .idea
 .ipynb_checkpoints
 visualize_module.facets_utils/__pycache__/
+.*
